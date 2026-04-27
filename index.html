@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>实验室安全：高标准入库考核</title>
+    <title>实验室安全：入库考核小游戏</title>
     <style>
         :root { 
             --primary-color: #1a252f; 
@@ -160,17 +160,36 @@
     <div class="toast" id="toast">提示信息</div>
 
 <script>
-    // --- 临床与基础医学 深度考核题库 (已补充图标) ---
+    // --- 临床与基础医学 深度考核题库 (扩充版) ---
     const masterChemicalDB = [
-        { id: "o1", name: "过氧乙酸", type: "oxidizer", hint: "强氧化剂、具腐蚀性", desc: "应存放于氧化剂专区。注意其对铝等金属有腐蚀性，存放环境必须冷暗通风！", icon: "🧪" },
-        { id: "f1", name: "95%分析纯乙醇", type: "flammable", hint: "有机溶剂", desc: "医学实验室最常用极易燃溶剂，必须存放于防爆柜。", icon: "🍾" },
-        { id: "r1", name: "氢化钠", type: "reducer", hint: "强还原剂", desc: "遇水发生剧烈反应释放氢气。严禁与强氧化剂同柜存放。", icon: "🪨" },
-        { id: "c1", name: "浓硫酸", type: "corrosive", hint: "强腐蚀性试剂", desc: "腐蚀品柜。遇水剧烈放热，必须严格隔离操作。", icon: "🛢️" },
-        // 核心考核点：结构式识别与易制毒管控
+        // 1. 常见氧化剂
+        { id: "o1", name: "过氧化氢(>8%)", type: "oxidizer", hint: "双氧水", desc: "医学实验中样本处理、消毒常用。属于强氧化剂。", icon: "💧" },
+        { id: "o2", name: "过氧乙酸", type: "oxidizer", hint: "兼具腐蚀/易燃性", desc: "应存放于氧化剂专区。注意其兼具易燃性，且对铝等金属有腐蚀性，存放环境必须冷暗通风！", icon: "🧪" },
+        { id: "o3", name: "硝酸/发烟硝酸", type: "oxidizer", hint: "兼具强腐蚀性", desc: "兼具强氧化性和强腐蚀性，通常存放于氧化剂专柜或防腐蚀柜隔离。", icon: "💨" },
+        { id: "o4", name: "高氯酸", type: "oxidizer", hint: "强氧化性酸", desc: "不同浓度的高氯酸均属强氧化剂，不当操作极易引起燃烧爆炸。", icon: "⚠️" },
+        { id: "o5", name: "重铬酸钠等重铬酸盐", type: "oxidizer", hint: "红矾钠", desc: "不仅是强氧化剂，还具有一定毒性和致癌性。", icon: "🧫" },
+        { id: "o6", name: "高锰酸钾", type: "oxidizer", hint: "紫色强氧化剂", desc: "常用于样本处理、有毒污染物净化，属于强氧化剂。", icon: "🟣" },
+        { id: "o7", name: "硝酸银/氯酸盐", type: "oxidizer", hint: "强氧化管控试剂", desc: "医学实验室常用的强氧化性管控化学品。硝酸银还需避光保存。", icon: "💎" },
+        { id: "o8", name: "过硫酸铵(APS)", type: "oxidizer", hint: "凝胶聚合引发剂", desc: "聚丙烯酰胺凝胶聚合常用引发剂。化学本质为<b>强氧化剂</b>，在实验中通过氧化TEMED产生自由基。", icon: "❄️" },
+
+        // 2. 常见还原剂
+        { id: "r1", name: "氢化钠/氢化钙", type: "reducer", hint: "强还原剂", desc: "科研合成实验常用。遇水发生剧烈反应释放氢气。严禁与强氧化剂同柜存放。", icon: "🪨" },
+        { id: "r2", name: "β-巯基乙醇", type: "reducer", hint: "常规还原性试剂", desc: "蛋白电泳实验中常用，用于断裂蛋白质二硫键，具强烈刺激性恶臭。", icon: "🦨" },
+
+        // 3. 常见易燃易爆化学品
+        { id: "f1", name: "95%分析纯乙醇", type: "flammable", hint: "有机溶剂", desc: "医学实验室最常用极易燃溶剂，酒精灯常用燃料，必须存放于防爆柜。", icon: "🍾" },
+        { id: "f2", name: "乙醚", type: "flammable", hint: "极易挥发", desc: "常用作实验溶剂，极易燃易爆，必须存放于防爆柜。", icon: "🌫️" },
+        { id: "f3", name: "氢气压缩钢瓶", type: "flammable", hint: "易燃压缩气体", desc: "催化类科研实验常用气体，泄漏后易引发钢瓶爆炸，须做好防爆与固定。", icon: "🎈" },
+
+        // 4. 常见腐蚀性化学品
+        { id: "c1", name: "三氯乙酸(TCA)", type: "corrosive", hint: "蛋白质沉淀剂", desc: "常用于蛋白质沉淀，接触皮肤/眼睛可造成严重灼伤。", icon: "☢️" },
+        { id: "c2", name: "甲醛/多聚甲醛", type: "corrosive", hint: "组织固定剂", desc: "易挥发，对呼吸道黏膜、皮肤有强刺激性和腐蚀性，属于一类致癌物。", icon: "🫙" },
+        { id: "c3", name: "酚/氯仿混合液", type: "corrosive", hint: "核酸提取试剂", desc: "核酸提取常用试剂，苯酚对皮肤有强腐蚀性和渗透毒性。", icon: "🧬" },
+        { id: "c4", name: "浓强酸/浓强碱", type: "corrosive", hint: "强腐蚀性试剂", desc: "医学实验室最常见的腐蚀性试剂。接触后易引发化学灼伤，需严格隔离存放。", icon: "🛢️" },
+
+        // 核心考核点：结构式、效用与隐患主动防御 (保持原版)
         { id: "t1", name: "(1R,2S)-2-甲氨基-1-苯基-1-丙醇", type: "toxic", hint: "【标签受损】仅见核心结构式", desc: "此结构为<b>麻黄碱</b>。属于第一类易制毒化学品，必须严格执行双人双锁与台账登记！", icon: "💊" },
-        // 核心考核点：药理实验效用与存储条件关联
         { id: "fr1", name: "肾上腺素注射液", type: "fridge", hint: "遇光和室温易氧化失效", desc: "为了在药理实验中准确演示氯丙嗪引起的“<b>肾上腺素升压作用翻转</b>”现象，必须将其置于2-8℃冷藏柜避光保存。", icon: "💉" },
-        // 核心考核点：隐患主动防御机制
         { id: "hz1", name: "玻璃酒精灯", type: "hazard", hint: "常规加热工具？", desc: "<b>发现安全隐患！</b>玻璃酒精灯存在受热不均炸裂的极大隐患。根据预防为主原则，现已强制要求统一报废，更换为<b>不锈钢防爆酒精灯</b>。", icon: "🪔" }
     ];
 
@@ -199,8 +218,6 @@
         lives = 2;
         isGameOver = false;
         document.getElementById('score').innerText = score;
-        
-        // 修复：原代码这里的 ID 引错了，改为 'modal'
         document.getElementById('modal').classList.remove('fatal-flash'); 
         
         updateLivesDisplay();
@@ -375,7 +392,6 @@
         const timeStr = `${date.getMonth()+1}月${date.getDate()}日`;
         const resultText = `【实验室安全考核战报】\n日期：${timeStr}\n得分：${score}分\n状态：${lives > 0 ? "通过 (Zero Accident)" : "发生安全事故"}\n我已熟知药理试剂管控标准与防爆要求，你能比我更规范吗？`;
         
-        // 尝试写入剪贴板（兼容移动端H5）
         if (navigator.clipboard && window.isSecureContext) {
             navigator.clipboard.writeText(resultText).then(() => {
                 alert("战报文本已复制到剪贴板！\n请直接去微信班级群或朋友圈粘贴打卡。");
@@ -390,7 +406,7 @@
     function fallbackCopyText(text) {
         const textArea = document.createElement("textarea");
         textArea.value = text;
-        textArea.style.position = "fixed";  // 避免滚动到页面底部
+        textArea.style.position = "fixed";
         document.body.appendChild(textArea);
         textArea.focus();
         textArea.select();
@@ -403,7 +419,6 @@
         document.body.removeChild(textArea);
     }
 
-    // 启动游戏
     window.onload = initGame;
 </script>
 </body>
