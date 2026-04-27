@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>实验室安全：高标准入库考核</title>
+    <style>
+        :root { 
+            --primary-color: #1a252f; 
+            --bg-color: #ecf0f1; 
+            --danger-color: #c0392b; 
+            --success-color: #27ae60;
+            --warning-color: #f39c12;
+        }
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; 
+            background-color: var(--bg-color); 
+            margin: 0; 
+            display: flex; 
+            flex-direction: column; 
+            height: 100vh; 
+            overflow: hidden; 
+            user-select: none; 
+        }
+        
+        .header { 
+            background-color: var(--primary-color); 
+            color: white; 
+            padding: 15px 20px; 
+            display: flex; 
+            justify-content: space-between; 
+            font-weight: bold; 
+            font-size: 15px; 
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1); 
+            z-index: 10; 
+        }
+        
+        /* 考题展示区 - 居中且强调压迫感 */
+        .question-stage { 
+            padding: 20px; 
+            background: #fff; 
+            border-bottom: 3px solid #bdc3c7; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            justify-content: center; 
+            min-height: 140px; 
+            position: relative;
+        }
+        
+        .current-item {
+            background-color: #fff;
+            border: 3px solid var(--primary-color);
+            border-radius: 12px;
+            padding: 15px 25px;
+            text-align: center;
+            box-shadow: 0 8px 15px rgba(0,0,0,0.1);
+            transform: scale(1);
+            transition: all 0.2s;
+            max-width: 80%;
+        }
+        
+        .item-icon { font-size: 40px; margin-bottom: 8px; }
+        .item-name { font-size: 16px; font-weight: bold; color: #2c3e50; line-height: 1.3; word-break: break-all; }
+        .item-hint { font-size: 12px; color: #7f8c8d; margin-top: 5px; }
+
+        /* 倒计时进度条 */
+        .timer-bar-container {
+            width: 80%;
+            height: 8px;
+            background-color: #e0e0e0;
+            border-radius: 4px;
+            margin-top: 15px;
+            overflow: hidden;
+        }
+        .timer-bar {
+            height: 100%;
+            width: 100%;
+            background-color: var(--success-color);
+            transition: width 0.1s linear, background-color 0.3s;
+        }
+
+        /* 柜子网格自适应 */
+        .cabinets-container { 
+            flex: 1; 
+            padding: 15px; 
+            display: grid; 
+            grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); 
+            gap: 12px; 
+            overflow-y: auto; 
+            padding-bottom: 40px; 
+        }
+        
+        .cabinet { 
+            border-radius: 8px; 
+            padding: 10px; 
+            text-align: center; 
+            cursor: pointer; 
+            border: 3px solid rgba(0,0,0,0.1); 
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.05); 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            justify-content: center; 
+            min-height: 90px; 
+            position: relative; 
+            transition: transform 0.1s, filter 0.1s;
+        }
+        .cabinet:active { transform: scale(0.95); filter: brightness(0.9); }
+        .cabinet-icon { font-size: 26px; background: rgba(255,255,255,0.9); border-radius: 50%; width: 40px; height: 40px; line-height: 40px; margin-bottom: 6px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); z-index: 2;}
+        .cabinet-label { background: rgba(255,255,255,0.95); padding: 4px 6px; border-radius: 4px; font-size: 12px; font-weight: bold; color: #333; border: 1px solid rgba(0,0,0,0.1); z-index: 2; width: 85%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;}
+        .cabinet::before { content: ''; position: absolute; top: 0; bottom: 0; left: 50%; border-left: 2px solid rgba(0,0,0,0.15); z-index: 1; }
+
+        /* 弹窗样式 */
+        .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.85); display: none; justify-content: center; align-items: center; z-index: 1000; flex-direction: column; }
+        .modal-content { background: white; padding: 25px; border-radius: 12px; width: 85%; max-width: 320px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        .btn { padding: 12px 20px; border: none; border-radius: 8px; font-size: 15px; cursor: pointer; width: 100%; font-weight: bold; margin-bottom: 10px; transition: opacity 0.2s; }
+        .btn:active { opacity: 0.8; }
+        .btn-primary { background-color: var(--primary-color); color: white; }
+        .btn-share { background-color: #07c160; color: white; }
+        
+        /* 动效与视觉反馈 */
+        .shake { animation: shake 0.4s; }
+        .fatal-flash { animation: fatalFlash 0.6s infinite; }
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-8px); } 75% { transform: translateX(8px); } }
+        @keyframes fatalFlash { 0%, 100% { background-color: rgba(0,0,0,0.85); } 50% { background-color: rgba(192,57,43,0.9); } }
+        
+        .toast { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(0,0,0,0.8); color: #fff; padding: 15px 25px; border-radius: 8px; font-size: 16px; font-weight: bold; display: none; z-index: 2000; text-align: center; white-space: nowrap; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div>规范分: <span id="score" style="color: #f1c40f;">0</span></div>
+        <div>进度: <span id="progress">0/0</span></div>
+        <div>容错: <span id="lives">❤️❤️</span></div>
+    </div>
+    
+    <div class="question-stage" id="stage">
+        <div class="current-item" id="current-item">
+            <div class="item-icon" id="item-icon">❓</div>
+            <div class="item-name" id="item-name">等待发药...</div>
+            <div class="item-hint" id="item-hint"></div>
+        </div>
+        <div class="timer-bar-container">
+            <div class="timer-bar" id="timer-bar"></div>
+        </div>
+    </div>
+
+    <div class="cabinets-container" id="cabinets"></div>
+    
+    <div class="modal-overlay" id="modal">
+        <div class="modal-content">
+            <h3 id="modal-title" style="margin-top:0;">提示</h3>
+            <div id="modal-body" style="font-size:14px; line-height:1.5; margin-bottom:20px; text-align: left;">内容</div>
+            <button class="btn btn-primary" id="modal-btn" onclick="closeModal()">确认</button>
+            <button class="btn btn-share" id="share-btn" style="display:none;" onclick="exportAndShare()">生成微信打卡战报</button>
+        </div>
+    </div>
+
+    <div class="toast" id="toast">提示信息</div>
+
+<script>
+    // --- 临床与基础医学 深度考核题库 (已补充图标) ---
+    const masterChemicalDB = [
+        { id: "o1", name: "过氧乙酸", type: "oxidizer", hint: "强氧化剂、具腐蚀性", desc: "应存放于氧化剂专区。注意其对铝等金属有腐蚀性，存放环境必须冷暗通风！", icon: "🧪" },
+        { id: "f1", name: "95%分析纯乙醇", type: "flammable", hint: "有机溶剂", desc: "医学实验室最常用极易燃溶剂，必须存放于防爆柜。", icon: "🍾" },
+        { id: "r1", name: "氢化钠", type: "reducer", hint: "强还原剂", desc: "遇水发生剧烈反应释放氢气。严禁与强氧化剂同柜存放。", icon: "🪨" },
+        { id: "c1", name: "浓硫酸", type: "corrosive", hint: "强腐蚀性试剂", desc: "腐蚀品柜。遇水剧烈放热，必须严格隔离操作。", icon: "🛢️" },
+        // 核心考核点：结构式识别与易制毒管控
+        { id: "t1", name: "(1R,2S)-2-甲氨基-1-苯基-1-丙醇", type: "toxic", hint: "【标签受损】仅见核心结构式", desc: "此结构为<b>麻黄碱</b>。属于第一类易制毒化学品，必须严格执行双人双锁与台账登记！", icon: "💊" },
+        // 核心考核点：药理实验效用与存储条件关联
+        { id: "fr1", name: "肾上腺素注射液", type: "fridge", hint: "遇光和室温易氧化失效", desc: "为了在药理实验中准确演示氯丙嗪引起的“<b>肾上腺素升压作用翻转</b>”现象，必须将其置于2-8℃冷藏柜避光保存。", icon: "💉" },
+        // 核心考核点：隐患主动防御机制
+        { id: "hz1", name: "玻璃酒精灯", type: "hazard", hint: "常规加热工具？", desc: "<b>发现安全隐患！</b>玻璃酒精灯存在受热不均炸裂的极大隐患。根据预防为主原则，现已强制要求统一报废，更换为<b>不锈钢防爆酒精灯</b>。", icon: "🪔" }
+    ];
+
+    const cabinetDB = [
+        { id: "flammable", name: "易燃防爆柜", bg: "#f1c40f" },
+        { id: "oxidizer", name: "氧化剂专柜", bg: "#95a5a6" },
+        { id: "reducer", name: "还原剂专柜", bg: "#8e44ad" },
+        { id: "corrosive", name: "强酸/腐蚀柜", bg: "#3498db" },
+        { id: "toxic", name: "毒麻/易制毒柜", bg: "#e74c3c" },
+        { id: "fridge", name: "2-8℃冷藏柜", bg: "#1abc9c" },
+        { id: "hazard", name: "隐患报废区", bg: "#34495e" }
+    ];
+
+    let score = 0;
+    let lives = 2; // 严格模式，仅允许错1次
+    let queue = [];
+    let currentItem = null;
+    let timerInterval;
+    let timeLeft = 100; // 进度条百分比
+    const timeLimitMs = 8000; // 每题8秒
+    const tickRate = 50;
+    let isGameOver = false;
+
+    function initGame() {
+        score = 0;
+        lives = 2;
+        isGameOver = false;
+        document.getElementById('score').innerText = score;
+        
+        // 修复：原代码这里的 ID 引错了，改为 'modal'
+        document.getElementById('modal').classList.remove('fatal-flash'); 
+        
+        updateLivesDisplay();
+        renderCabinets();
+        
+        // 随机打乱并生成本次考核队列
+        queue = [...masterChemicalDB].sort(() => Math.random() - 0.5);
+        updateProgress();
+        nextQuestion();
+    }
+
+    function renderCabinets() {
+        const container = document.getElementById('cabinets');
+        container.innerHTML = ''; 
+        cabinetDB.forEach(cab => {
+            const el = document.createElement('div');
+            el.className = 'cabinet';
+            el.style.backgroundColor = cab.bg;
+            el.innerHTML = `<div class="cabinet-label" style="margin-top:10px;">${cab.name}</div>`;
+            el.onclick = () => tryPlace(cab.id, el);
+            container.appendChild(el);
+        });
+    }
+
+    function nextQuestion() {
+        clearInterval(timerInterval);
+        if (queue.length === 0) {
+            triggerGameOver(true);
+            return;
+        }
+        
+        currentItem = queue.pop();
+        updateProgress();
+        
+        // 动态更新试剂名称、提示和图标
+        document.getElementById('item-name').innerText = currentItem.name;
+        document.getElementById('item-hint').innerText = currentItem.hint;
+        document.getElementById('item-icon').innerText = currentItem.icon || "❓";
+        
+        // 重置倒计时
+        timeLeft = 100;
+        const timerBar = document.getElementById('timer-bar');
+        timerBar.style.width = '100%';
+        timerBar.style.backgroundColor = 'var(--success-color)';
+        
+        timerInterval = setInterval(() => {
+            if(isGameOver) return clearInterval(timerInterval);
+            
+            timeLeft -= (tickRate / timeLimitMs) * 100;
+            timerBar.style.width = Math.max(0, timeLeft) + '%';
+            
+            if (timeLeft < 40) timerBar.style.backgroundColor = 'var(--warning-color)';
+            if (timeLeft < 15) timerBar.style.backgroundColor = 'var(--danger-color)';
+            
+            if (timeLeft <= 0) {
+                clearInterval(timerInterval);
+                handleMistake(null, "操作超时！未及时将危险品入库。");
+            }
+        }, tickRate);
+    }
+
+    function updateProgress() {
+        const total = masterChemicalDB.length;
+        const current = total - queue.length;
+        document.getElementById('progress').innerText = `${Math.max(0, current-1)}/${total}`;
+    }
+
+    function updateLivesDisplay() {
+        document.getElementById('lives').innerText = '❤️'.repeat(Math.max(0, lives));
+    }
+
+    function tryPlace(cabinetId, cabinetElement) {
+        if (!currentItem || isGameOver) return;
+        clearInterval(timerInterval);
+        
+        if (currentItem.type === cabinetId) {
+            // 正确入库
+            let pts = Math.floor(10 + (timeLeft / 10)); // 速度越快分越高
+            score += pts;
+            document.getElementById('score').innerText = score;
+            showToast(`+${pts} 分`);
+            
+            // 针对核心考核点的特殊正反馈
+            if (currentItem.id === 'hz1' || currentItem.id === 't1' || currentItem.id === 'fr1') {
+                showModal('规范落实确认', `<div style="color:var(--success-color); font-weight:bold; margin-bottom:10px;">操作极其规范！</div>${currentItem.desc}`, false);
+            } else {
+                setTimeout(nextQuestion, 300); // 普通试剂直接下一题，保持流畅节奏
+            }
+        } else {
+            // 错误判定：一票否决(致死)判定
+            const isFatal = (currentItem.type === 'oxidizer' && (cabinetId === 'flammable' || cabinetId === 'reducer')) ||
+                            (currentItem.type === 'reducer' && cabinetId === 'oxidizer') ||
+                            (currentItem.type === 'flammable' && cabinetId === 'oxidizer');
+            
+            let errMsg = `【${currentItem.name}】不能放入此区域。<br><br><b>正确解析：</b><br>${currentItem.desc}`;
+            
+            if (isFatal) {
+                errMsg = `<div style="color:red; font-size:18px; font-weight:bold; text-align:center;">🔥🔥 严重爆炸事故 🔥🔥</div><br>强氧化剂与易燃物/还原剂混放，引发了不可逆的安全灾难！<br><br><b>后果：一票否决，考核失败。</b>`;
+                cabinetElement.classList.add('shake');
+                triggerGameOver(false, errMsg, true);
+                return;
+            }
+            
+            // 普通错误扣血
+            cabinetElement.classList.add('shake');
+            setTimeout(() => cabinetElement.classList.remove('shake'), 400);
+            handleMistake(cabinetElement, errMsg);
+        }
+    }
+
+    function handleMistake(element, msg) {
+        lives--;
+        updateLivesDisplay();
+        if (lives <= 0) {
+            triggerGameOver(false, msg + "<br><br><span style='color:red'>容错耗尽，考核终止。</span>", false);
+        } else {
+            showModal('操作违规', msg, false);
+        }
+    }
+
+    function showToast(text) {
+        const toast = document.getElementById('toast');
+        toast.innerText = text;
+        toast.style.display = 'block';
+        setTimeout(() => toast.style.display = 'none', 800);
+    }
+
+    function showModal(title, body, isEnd) {
+        document.getElementById('modal-title').innerText = title;
+        document.getElementById('modal-body').innerHTML = body;
+        document.getElementById('modal').style.display = 'flex';
+        
+        const btn = document.getElementById('modal-btn');
+        const shareBtn = document.getElementById('share-btn');
+        
+        if (isEnd) {
+            btn.innerText = "重新参加考核";
+            btn.onclick = () => { closeModal(); initGame(); };
+            shareBtn.style.display = 'block';
+        } else {
+            btn.innerText = "知晓并继续";
+            btn.onclick = () => { closeModal(); nextQuestion(); };
+            shareBtn.style.display = 'none';
+        }
+    }
+
+    function triggerGameOver(isWin, fatalMsg = "", isFatal = false) {
+        isGameOver = true;
+        clearInterval(timerInterval);
+        
+        if (isFatal) {
+            document.getElementById('modal').classList.add('fatal-flash');
+        }
+
+        if (isWin) {
+            showModal('考核通过 (Zero Accident)', 
+                `评估得分：<b style="color:var(--success-color); font-size:20px;">${score}</b>分。<br><br>您已成功排查所有试剂与设备隐患（包括结构式识别及特殊保存条件）。具备进入高级别基础医学实验室资格。`, 
+                true);
+        } else {
+            showModal('考核未达标', fatalMsg, true);
+        }
+    }
+
+    function closeModal() { 
+        document.getElementById('modal').style.display = 'none'; 
+        document.getElementById('modal').classList.remove('fatal-flash');
+    }
+    
+    // 生成基于微信移动端分享兼容的文本流
+    function exportAndShare() {
+        const date = new Date();
+        const timeStr = `${date.getMonth()+1}月${date.getDate()}日`;
+        const resultText = `【实验室安全考核战报】\n日期：${timeStr}\n得分：${score}分\n状态：${lives > 0 ? "通过 (Zero Accident)" : "发生安全事故"}\n我已熟知药理试剂管控标准与防爆要求，你能比我更规范吗？`;
+        
+        // 尝试写入剪贴板（兼容移动端H5）
+        if (navigator.clipboard && window.isSecureContext) {
+            navigator.clipboard.writeText(resultText).then(() => {
+                alert("战报文本已复制到剪贴板！\n请直接去微信班级群或朋友圈粘贴打卡。");
+            }).catch(err => {
+                fallbackCopyText(resultText);
+            });
+        } else {
+            fallbackCopyText(resultText);
+        }
+    }
+
+    function fallbackCopyText(text) {
+        const textArea = document.createElement("textarea");
+        textArea.value = text;
+        textArea.style.position = "fixed";  // 避免滚动到页面底部
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        try {
+            document.execCommand('copy');
+            alert("战报文本已复制！\n请直接去微信班级群粘贴打卡。");
+        } catch (err) {
+            alert("复制失败，请手动截图分享。\n战报内容：\n" + text);
+        }
+        document.body.removeChild(textArea);
+    }
+
+    // 启动游戏
+    window.onload = initGame;
+</script>
+</body>
+</html>
