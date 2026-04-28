@@ -3,136 +3,76 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>实验室安全：危化品入库考核</title>
+    <title>实验室安全：危化品及易制毒入库考核</title>
     <style>
         :root { 
-            --primary-color: #1a252f; 
-            --bg-color: #ecf0f1; 
-            --danger-color: #c0392b; 
+            --primary-color: #2c3e50; 
+            --bg-color: #f4f7f6; 
+            --danger-color: #e74c3c; 
             --success-color: #27ae60;
-            --warning-color: #f39c12;
+            --accent-color: #3498db;
         }
         body { 
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; 
             background-color: var(--bg-color); 
-            margin: 0; 
-            display: flex; 
-            flex-direction: column; 
-            height: 100vh; 
-            overflow: hidden; 
-            user-select: none; 
+            margin: 0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; user-select: none; 
         }
-        
         .header { 
-            background-color: var(--primary-color); 
-            color: white; 
-            padding: 15px 20px; 
-            display: flex; 
-            justify-content: space-between; 
-            font-weight: bold; 
-            font-size: 15px; 
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1); 
-            z-index: 10; 
+            background-color: var(--primary-color); color: white; padding: 15px 20px; 
+            display: flex; justify-content: space-between; font-weight: bold; font-size: 14px; 
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1); z-index: 10; 
         }
-        
         .question-stage { 
-            padding: 20px; 
-            background: #fff; 
-            border-bottom: 3px solid #bdc3c7; 
-            display: flex; 
-            flex-direction: column; 
-            align-items: center; 
-            justify-content: center; 
-            min-height: 140px; 
-            position: relative;
+            padding: 20px; background: #fff; border-bottom: 2px solid #ddd; 
+            display: flex; flex-direction: column; align-items: center; justify-content: center; 
+            min-height: 160px; position: relative;
         }
-        
         .current-item {
-            background-color: #fff;
-            border: 3px solid var(--primary-color);
-            border-radius: 12px;
-            padding: 15px 25px;
-            text-align: center;
-            box-shadow: 0 8px 15px rgba(0,0,0,0.1);
-            transform: scale(1);
-            transition: all 0.2s;
-            max-width: 80%;
+            background-color: #fff; border: 3px solid var(--primary-color); border-radius: 15px;
+            padding: 15px 20px; text-align: center; box-shadow: 0 10px 20px rgba(0,0,0,0.05); width: 85%;
         }
+        .item-icon { font-size: 42px; margin-bottom: 8px; }
+        .item-name { font-size: 20px; font-weight: bold; color: #34495e; }
+        .item-hint { font-size: 13px; color: #95a5a6; margin-top: 6px; font-style: italic; }
+        .timer-bar-container { width: 85%; height: 6px; background-color: #eee; border-radius: 3px; margin-top: 20px; overflow: hidden; }
+        .timer-bar { height: 100%; width: 100%; background-color: var(--success-color); transition: width 0.1s linear; }
         
-        .item-icon { font-size: 40px; margin-bottom: 8px; }
-        .item-name { font-size: 18px; font-weight: bold; color: #2c3e50; line-height: 1.3; }
-        .item-hint { font-size: 12px; color: #7f8c8d; margin-top: 5px; }
-
-        .timer-bar-container {
-            width: 80%;
-            height: 8px;
-            background-color: #e0e0e0;
-            border-radius: 4px;
-            margin-top: 15px;
-            overflow: hidden;
-        }
-        .timer-bar {
-            height: 100%;
-            width: 100%;
-            background-color: var(--success-color);
-            transition: width 0.1s linear;
-        }
-
         .cabinets-container { 
-            flex: 1; 
-            padding: 15px; 
-            display: grid; 
-            grid-template-columns: repeat(2, 1fr); 
-            gap: 12px; 
-            overflow-y: auto; 
-            padding-bottom: 40px; 
+            flex: 1; padding: 15px; display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; 
+            overflow-y: auto; padding-bottom: 40px; 
         }
-        
         .cabinet { 
-            border-radius: 8px; 
-            padding: 15px; 
-            text-align: center; 
-            cursor: pointer; 
-            border: 3px solid rgba(0,0,0,0.1); 
-            display: flex; 
-            flex-direction: column; 
-            align-items: center; 
-            justify-content: center; 
-            min-height: 80px; 
-            position: relative; 
+            border-radius: 10px; padding: 15px; text-align: center; cursor: pointer; 
+            border: 2px solid rgba(0,0,0,0.05); display: flex; flex-direction: column; align-items: center; justify-content: center; 
+            min-height: 90px; transition: all 0.2s; box-shadow: 0 4px 6px rgba(0,0,0,0.05);
         }
-        .cabinet:active { transform: scale(0.95); }
-        .cabinet-label { font-size: 14px; font-weight: bold; color: #fff; text-shadow: 1px 1px 2px rgba(0,0,0,0.5); }
+        .cabinet:active { transform: scale(0.96); filter: brightness(0.9); }
+        .cabinet-label { font-size: 14px; font-weight: bold; color: #fff; text-shadow: 1px 1px 2px rgba(0,0,0,0.3); }
 
         .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.85); display: none; justify-content: center; align-items: center; z-index: 1000; flex-direction: column; }
-        .modal-content { background: white; padding: 25px; border-radius: 12px; width: 85%; max-width: 320px; text-align: center; }
-        .btn { padding: 12px 20px; border: none; border-radius: 8px; font-size: 15px; cursor: pointer; width: 100%; font-weight: bold; margin-bottom: 10px; }
+        .modal-content { background: white; padding: 25px; border-radius: 16px; width: 88%; max-width: 340px; text-align: center; }
+        .btn { padding: 14px 20px; border: none; border-radius: 10px; font-size: 16px; cursor: pointer; width: 100%; font-weight: bold; margin-bottom: 12px; }
         .btn-primary { background-color: var(--primary-color); color: white; }
-        
+        .btn-share { background-color: var(--success-color); color: white; }
         .shake { animation: shake 0.4s; }
-        .fatal-flash { animation: fatalFlash 0.6s infinite; }
         @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-8px); } 75% { transform: translateX(8px); } }
-        @keyframes fatalFlash { 0%, 100% { background-color: rgba(0,0,0,0.85); } 50% { background-color: rgba(192,57,43,0.9); } }
-        
-        .toast { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(0,0,0,0.8); color: #fff; padding: 15px 25px; border-radius: 8px; display: none; z-index: 2000; }
+        .toast { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(44, 62, 80, 0.95); color: #fff; padding: 15px 30px; border-radius: 10px; display: none; z-index: 2000; text-align: center; font-weight: bold; }
     </style>
 </head>
 <body>
     <div class="header">
-        <div>得分: <span id="score">0</span></div>
-        <div>进度: <span id="progress">0/0</span></div>
+        <div>得分: <span id="score" style="color:#f1c40f">0</span></div>
+        <div>进度: <span id="progress">0/20</span></div>
         <div>生命: <span id="lives">❤️❤️</span></div>
     </div>
     
     <div class="question-stage" id="stage">
         <div class="current-item" id="current-item">
-            <div class="item-icon" id="item-icon">❓</div>
-            <div class="item-name" id="item-name">准备中...</div>
+            <div class="item-icon" id="item-icon">📦</div>
+            <div class="item-name" id="item-name">初始化中...</div>
             <div class="item-hint" id="item-hint"></div>
         </div>
-        <div class="timer-bar-container">
-            <div class="timer-bar" id="timer-bar"></div>
-        </div>
+        <div class="timer-bar-container"><div class="timer-bar" id="timer-bar"></div></div>
     </div>
 
     <div class="cabinets-container" id="cabinets"></div>
@@ -140,49 +80,54 @@
     <div class="modal-overlay" id="modal">
         <div class="modal-content">
             <h3 id="modal-title">提示</h3>
-            <div id="modal-body" style="font-size:14px; line-height:1.5; margin-bottom:20px; text-align: left;"></div>
-            <button class="btn btn-primary" id="modal-btn" onclick="closeModal()">确认</button>
+            <div id="modal-body" style="font-size:14px; line-height:1.6; margin-bottom:20px; text-align: left; color:#34495e;"></div>
+            <button class="btn btn-primary" id="modal-btn" onclick="closeModal()">知晓并继续</button>
+            <button class="btn btn-share" id="share-btn" style="display:none;" onclick="shareResult()">复制考核战报</button>
         </div>
     </div>
 
     <div class="toast" id="toast"></div>
 
 <script>
-    // --- 基于Excel文件的 24 种试剂全量库 ---
+    // --- 完整试剂库 (包含易制毒分类及柜体存放建议) ---
     const masterChemicalDB = [
-        // 1. 易燃类 (Flammable)
-        { name: "二甲苯", type: "flammable", hint: "病理切片脱蜡剂", desc: "易燃液体，蒸汽有毒且具致癌风险，必须存放于防爆柜。", icon: "🌫️" },
-        { name: "甲醇", type: "flammable", hint: "脱水剂/溶剂", desc: "易燃、剧毒，可致盲。存放于易燃品防爆柜。", icon: "☠️" },
-        { name: "无水乙醇", type: "flammable", hint: "常规溶剂", desc: "高纯度酒精，极易燃。远离火源存放于防爆柜。", icon: "🍾" },
-        { name: "异丙醇", type: "flammable", hint: "核酸沉淀常用", desc: "易燃液体，具有刺激性，需存放于易燃防爆柜。", icon: "🧪" },
-        { name: "丙酮", type: "flammable", hint: "器皿清洗/脱水剂", desc: "极易燃，挥发性强，蒸汽易爆。存放于防爆柜。", icon: "🛢️" },
-        { name: "冰乙酸", type: "flammable", hint: "凝固性乙酸", desc: "虽然是酸，但其闪点低，属于易燃液体，且具腐蚀性。", icon: "🧊" },
+        // 第二类易制毒
+        { name: "三氯甲烷(氯仿)", type: "toxic", hint: "第二类易制毒化学品", desc: "【三氯甲烷】属于【第二类易制毒】化学品，具麻醉性。应存放于【毒麻/易制毒柜】，实行双人双锁管理。", icon: "😷" },
+        { name: "乙醚", type: "flammable", hint: "第二类易制毒化学品", desc: "【乙醚】属于【第二类易制毒】化学品，极易燃、易爆。应存放于【易燃防爆柜】，并严格落实易制毒管理规定。", icon: "🌫️" },
+        
+        // 第三类易制毒
+        { name: "丙酮", type: "flammable", hint: "第三类易制毒化学品", desc: "【丙酮】属于【第三类易制毒】化学品，极易燃。应存放于【易燃防爆柜】。", icon: "🛢️" },
+        { name: "浓硫酸", type: "corrosive", hint: "第三类易制毒化学品", desc: "【浓硫酸】属于【第三类易制毒】化学品，强腐蚀性。应存放于【强酸碱腐蚀柜】。", icon: "🔥" },
+        { name: "盐酸", type: "corrosive", hint: "第三类易制毒化学品", desc: "【盐酸】属于【第三类易制毒】化学品，强腐蚀性且易挥发。应存放于【强酸碱腐蚀柜】。", icon: "🧪" },
+        { name: "甲苯", type: "flammable", hint: "第三类易制毒化学品", desc: "【甲苯】属于【第三类易制毒】化学品，易燃液体。应存放于【易燃防爆柜】。", icon: "🧪" },
 
-        // 2. 氧化类 (Oxidizer)
-        { name: "30%双氧水", type: "oxidizer", hint: "过氧化氢溶液", desc: "强氧化剂，受热或遇杂质易分解爆炸。存放于氧化柜。", icon: "💧" },
-        { name: "浓硝酸", type: "oxidizer", hint: "发烟硝酸", desc: "强酸且具强氧化性，与有机物接触易燃。隔离存放。", icon: "💨" },
-        { name: "次氯酸钠", type: "oxidizer", hint: "漂白水/消毒剂", desc: "氧化剂。切忌与盐酸混放（会产生毒氯气）。", icon: "🧼" },
+        // 易燃类
+        { name: "二甲苯", type: "flammable", hint: "病理透明剂", desc: "【二甲苯】易燃且具神经毒性，应存放于【易燃防爆柜】。", icon: "🌫️" },
+        { name: "无水乙醇", type: "flammable", hint: "高纯酒精", desc: "【无水乙醇】极易燃，应远离火源，存放于【易燃防爆柜】。", icon: "🍾" },
+        { name: "甲醇", type: "flammable", hint: "色谱纯/脱水剂", desc: "【甲醇】易燃且具剧毒性，应存放于【易燃防爆柜】。", icon: "☠️" },
+        { name: "异丙醇", type: "flammable", hint: "沉淀常用", desc: "【异丙醇】易燃，蒸汽可引起头晕，应存放于【易燃防爆柜】。", icon: "🧪" },
+        { name: "冰乙酸", type: "flammable", hint: "强刺激性乙酸", desc: "【冰乙酸】闪点低，属于易燃液体，应存放于【易燃防爆柜】。", icon: "🧊" },
 
-        // 3. 腐蚀类 (Corrosive)
-        { name: "氢氧化钾", type: "corrosive", hint: "强碱", desc: "极强腐蚀性，易潮解。存放在防腐蚀柜。", icon: "⚪" },
-        { name: "氢氧化钠", type: "corrosive", hint: "火碱/烧碱", desc: "极强腐蚀性，对人体组织有破坏作用。存放在腐蚀柜。", icon: "⚪" },
-        { name: "三氯乙酸", type: "corrosive", hint: "TCA/蛋白沉淀剂", desc: "强腐蚀性有机酸。存放在酸碱腐蚀柜。", icon: "☢️" },
-        { name: "甲醛", type: "corrosive", hint: "固定液", desc: "刺激性气味，致癌物。存放于通风良好的腐蚀柜。", icon: "🫙" },
-        { name: "多聚甲醛", type: "corrosive", hint: "PFA", desc: "分解释放甲醛气体，具毒性与腐蚀性。", icon: "❄️" },
-        { name: "戊二醛", type: "corrosive", hint: "电镜固定液", desc: "对眼睛及呼吸道有强刺激。存放在腐蚀柜。", icon: "🔬" },
-        { name: "盐酸", type: "corrosive", hint: "挥发性强酸", desc: "强腐蚀性，酸雾具刺激性。存放于腐蚀柜。", icon: "🧪" },
-        { name: "福尔马林", type: "corrosive", hint: "甲醛溶液", desc: "强腐蚀、强刺激。存放在专用腐蚀柜。", icon: "🫙" },
-        { name: "浓硫酸", type: "corrosive", hint: "脱水强酸", desc: "强腐蚀且遇水剧烈放热。严格存放在防腐蚀柜。", icon: "🔥" },
-        { name: "氨水", type: "corrosive", hint: "碱性/刺激性", desc: "挥发性极强，具腐蚀性和毒性。存放于通风腐蚀柜。", icon: "💨" },
+        // 氧化类
+        { name: "双氧水30%", type: "oxidizer", hint: "过氧化氢", desc: "【双氧水】强氧化剂，严禁与还原剂、易燃物混放，应存放于【氧化剂专柜】。", icon: "💧" },
+        { name: "浓硝酸", type: "oxidizer", hint: "强氧化酸", desc: "【浓硝酸】具强氧化性，遇有机物易自燃，应存放于【氧化剂专柜】。", icon: "💨" },
+        { name: "次氯酸钠", type: "oxidizer", hint: "有效氯消毒剂", desc: "【次氯酸钠】强氧化剂，严禁与强酸混放，应存放于【氧化剂专柜】。", icon: "🧼" },
 
-        // 4. 毒害/管控类 (Toxic)
-        { name: "氯仿", type: "toxic", hint: "三氯甲烷/易制毒", desc: "具麻醉性、致癌性，易分解产生光气。双人双锁管理。", icon: "😷" },
-        { name: "丙烯酰胺", type: "toxic", hint: "电泳制胶", desc: "强神经毒素，具累积毒性。必须存放于毒品柜。", icon: "🧱" },
-        { name: "DMSO", type: "toxic", hint: "二甲基亚砜", desc: "透皮吸收极强，能携带毒物入体。妥善存放于试剂柜。", icon: "💧" },
+        // 腐蚀类
+        { name: "氢氧化钠", type: "corrosive", hint: "苛性钠/强碱", desc: "【氢氧化钠】极强腐蚀性，应存放于【强酸碱腐蚀柜】。", icon: "⚪" },
+        { name: "氢氧化钾", type: "corrosive", hint: "强碱", desc: "【氢氧化钾】极强腐蚀性，应存放于【强酸碱腐蚀柜】。", icon: "⚪" },
+        { name: "甲醛", type: "corrosive", hint: "固定液/致癌", desc: "【甲醛】具腐蚀性和毒性，应存放于通风良好的【强酸碱腐蚀柜】。", icon: "🫙" },
+        { name: "多聚甲醛", type: "corrosive", hint: "PFA", desc: "【多聚甲醛】分解释放甲醛气，应存放于【强酸碱腐蚀柜】。", icon: "❄️" },
+        { name: "戊二醛", type: "corrosive", hint: "电镜固定剂", desc: "【戊二醛】强刺激性，应存放于【强酸碱腐蚀柜】。", icon: "🔬" },
+        { name: "福尔马林", type: "corrosive", hint: "甲醛溶液", desc: "【福尔马林】具强腐蚀、强刺激性，应存放于【强酸碱腐蚀柜】。", icon: "🫙" },
+        { name: "三氯乙酸", type: "corrosive", hint: "有机强酸", desc: "【三氯乙酸】强腐蚀性，应存放于【强酸碱腐蚀柜】。", icon: "☢️" },
+        { name: "氨水", type: "corrosive", hint: "挥发性强碱", desc: "【氨水】挥发性极强，具腐蚀性，应存放于【强酸碱腐蚀柜】且加强通风。", icon: "💨" },
 
-        // 5. 还原类 (Reducer)
-        { name: "TEMED", type: "reducer", hint: "四甲基乙二胺", desc: "强还原剂，助促凝。严禁与氧化剂混放，具恶臭。", icon: "🐟" },
-        { name: "β-巯基乙醇", type: "reducer", hint: "蛋白变性剂", desc: "极强还原性，有恶臭毒性。存放在通风试剂柜。", icon: "🦨" }
+        // 毒害/还原类
+        { name: "丙烯酰胺", type: "toxic", hint: "制胶原料/神经毒", desc: "【丙烯酰胺】强神经毒素，应存放于【毒麻/易制毒柜】加锁管理。", icon: "🧱" },
+        { name: "DMSO", type: "toxic", hint: "渗透性极强", desc: "【DMSO】透皮吸收性强，应存放于【毒麻/易制毒柜】或专用橱柜。", icon: "💧" },
+        { name: "TEMED", type: "reducer", hint: "促凝/强还原剂", desc: "【TEMED】属于强还原剂，具恶臭，应存放于【还原剂专柜】。", icon: "🐟" },
+        { name: "β-巯基乙醇", type: "reducer", hint: "强还原/恶臭", desc: "【β-巯基乙醇】强还原剂，有毒且臭，应存放于【还原剂专柜】。", icon: "🦨" }
     ];
 
     const cabinetDB = [
@@ -193,23 +138,19 @@
         { id: "toxic", name: "毒麻/易制毒柜", bg: "#e74c3c" }
     ];
 
-    let score = 0;
-    let lives = 2;
-    let queue = [];
-    let currentItem = null;
-    let timerInterval;
-    let timeLeft = 100;
-    let totalQuestions = 0; 
-    let isGameOver = false;
+    let score = 0, lives = 2, queue = [], currentItem = null, timerInterval, timeLeft = 100, isGameOver = false;
+    let totalRounds = 20; // 设定每局20道随机题
+    let startTime;
 
     function initGame() {
-        score = 0;
-        lives = 2;
-        isGameOver = false;
+        score = 0; lives = 2; isGameOver = false;
+        startTime = new Date();
         document.getElementById('score').innerText = score;
+        document.getElementById('lives').innerText = "❤️❤️";
         renderCabinets();
-        queue = [...masterChemicalDB].sort(() => Math.random() - 0.5);
-        totalQuestions = queue.length; 
+        // 随机逻辑修改：从总库随机抽取20个
+        let fullPool = [...masterChemicalDB].sort(() => Math.random() - 0.5);
+        queue = fullPool.slice(0, totalRounds);
         updateProgress();
         nextQuestion();
     }
@@ -219,8 +160,7 @@
         container.innerHTML = ''; 
         cabinetDB.forEach(cab => {
             const el = document.createElement('div');
-            el.className = 'cabinet';
-            el.style.backgroundColor = cab.bg;
+            el.className = 'cabinet'; el.style.backgroundColor = cab.bg;
             el.innerHTML = `<div class="cabinet-label">${cab.name}</div>`;
             el.onclick = () => tryPlace(cab.id, el);
             container.appendChild(el);
@@ -229,53 +169,39 @@
 
     function nextQuestion() {
         clearInterval(timerInterval);
-        if (queue.length === 0) {
-            triggerGameOver(true);
-            return;
-        }
+        if (queue.length === 0) return triggerGameOver(true);
         currentItem = queue.pop();
         updateProgress();
         document.getElementById('item-name').innerText = currentItem.name;
         document.getElementById('item-hint').innerText = currentItem.hint;
         document.getElementById('item-icon').innerText = currentItem.icon;
-        
         timeLeft = 100;
         const timerBar = document.getElementById('timer-bar');
-        timerBar.style.width = '100%';
-        
         timerInterval = setInterval(() => {
             if(isGameOver) return;
-            timeLeft -= 1.2; // 约8秒一题
+            timeLeft -= 1.2; 
             timerBar.style.width = timeLeft + '%';
-            if (timeLeft <= 0) {
-                clearInterval(timerInterval);
-                handleMistake(null, "操作超时！未及时入库。");
-            }
+            if (timeLeft <= 0) { clearInterval(timerInterval); handleMistake(null, "操作超时！未在规定时间内正确归位。"); }
         }, 100);
     }
 
     function updateProgress() {
-        document.getElementById('progress').innerText = `${totalQuestions - queue.length}/${totalQuestions}`;
+        document.getElementById('progress').innerText = `${totalRounds - queue.length}/${totalRounds}`;
     }
 
     function tryPlace(cabinetId, el) {
         if (!currentItem || isGameOver) return;
         clearInterval(timerInterval);
-        
         if (currentItem.type === cabinetId) {
-            score += 10;
-            document.getElementById('score').innerText = score;
-            showToast("正确！+10");
+            score += 10; document.getElementById('score').innerText = score;
+            showToast("✅ 入库正确！+10");
             setTimeout(nextQuestion, 400);
         } else {
-            // 判定是否属于爆炸性混放 (氧化+还原/易燃)
-            const isFatal = (currentItem.type === 'oxidizer' && (cabinetId === 'flammable' || cabinetId === 'reducer')) ||
-                            (currentItem.type === 'reducer' && cabinetId === 'oxidizer');
-            
-            let msg = `【${currentItem.name}】放错位置了！<br><br><b>解析：</b>${currentItem.desc}`;
+            const isFatal = (currentItem.type === 'oxidizer' && (cabinetId === 'flammable' || cabinetId === 'reducer')) || (currentItem.type === 'reducer' && cabinetId === 'oxidizer');
+            let msg = `<b>判定错误：</b>【${currentItem.name}】位置错误。<br><br><b>规范要求：</b>${currentItem.desc}`;
             if (isFatal) {
-                msg = `<span style="color:red;font-weight:bold">🔥 严重事故：</span>氧化剂与还原剂/易燃物混放引发爆炸！<br><br>评估不合格。`;
-                triggerGameOver(false, msg, true);
+                msg = `<span style="color:red;font-weight:bold">🔥 重大事故警告：</span>氧化剂严禁与易燃/还原剂混放！<br><br>${currentItem.desc}`;
+                triggerGameOver(false, msg);
             } else {
                 handleMistake(el, msg);
             }
@@ -283,22 +209,14 @@
     }
 
     function handleMistake(el, msg) {
-        lives--;
-        document.getElementById('lives').innerText = '❤️'.repeat(lives);
+        lives--; document.getElementById('lives').innerText = '❤️'.repeat(Math.max(0, lives));
         if (el) el.classList.add('shake');
         setTimeout(() => { if(el) el.classList.remove('shake'); }, 400);
-        
-        if (lives <= 0) {
-            triggerGameOver(false, msg, false);
-        } else {
-            showModal("操作违规", msg);
-        }
+        if (lives <= 0) triggerGameOver(false, msg); else showModal("操作违规", msg);
     }
 
     function showToast(txt) {
-        const t = document.getElementById('toast');
-        t.innerText = txt;
-        t.style.display = 'block';
+        const t = document.getElementById('toast'); t.innerText = txt; t.style.display = 'block';
         setTimeout(() => t.style.display = 'none', 800);
     }
 
@@ -306,24 +224,32 @@
         document.getElementById('modal-title').innerHTML = title;
         document.getElementById('modal-body').innerHTML = body;
         document.getElementById('modal').style.display = 'flex';
+        document.getElementById('share-btn').style.display = 'none';
     }
 
-    function closeModal() {
-        document.getElementById('modal').style.display = 'none';
-        if (!isGameOver) nextQuestion();
+    function closeModal() { document.getElementById('modal').style.display = 'none'; if (!isGameOver) nextQuestion(); }
+
+    function triggerGameOver(win, msg) {
+        isGameOver = true; clearInterval(timerInterval);
+        const title = win ? "考核通过 ✅" : "考核不合格 ❌";
+        const content = win ? `恭喜！你已完成 20 道危化品及易制毒分类题目。<br><b>最终得分：${score} 分</b>` : msg;
+        showModal(title, content);
+        document.getElementById('share-btn').style.display = 'block';
+        document.getElementById('modal-btn').innerText = "重新开始";
+        document.getElementById('modal-btn').onclick = () => location.reload();
     }
 
-    function triggerGameOver(win, msg, fatal) {
-        isGameOver = true;
-        clearInterval(timerInterval);
-        const title = win ? "考核通过" : "考核失败";
-        const finalMsg = win ? `恭喜！你已完成全部 ${totalQuestions} 种试剂的分类。` : msg;
-        if (fatal) document.getElementById('modal').classList.add('fatal-flash');
+    function shareResult() {
+        const now = new Date();
+        const duration = Math.floor((now - startTime) / 1000);
+        const status = lives > 0 ? "合格 (Safe)" : "不合格 (Hazard)";
+        const shareText = `【实验室安全考核战报】\n日期：${now.toLocaleDateString()}\n考核状态：${status}\n最终得分：${score}分\n考核用时：${duration}秒\n重点知识：已掌握第二类(氯仿、乙醚)及第三类易制毒化学品分类存储规范！`;
         
-        showModal(title, finalMsg);
-        const btn = document.getElementById('modal-btn');
-        btn.innerText = "重新开始";
-        btn.onclick = () => location.reload();
+        if (navigator.clipboard) {
+            navigator.clipboard.writeText(shareText).then(() => alert("战报已复制！快去微信朋友圈或工作群粘贴打卡吧。"));
+        } else {
+            alert(shareText);
+        }
     }
 
     window.onload = initGame;
