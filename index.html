@@ -3,14 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>实验室安全：危化品及易制毒入库考核</title>
+    <title>实验室安全：危化品及易制毒分类考核</title>
     <style>
         :root { 
             --primary-color: #2c3e50; 
             --bg-color: #f4f7f6; 
             --danger-color: #e74c3c; 
             --success-color: #27ae60;
-            --accent-color: #3498db;
+            --acid-color: #3498db;
+            --base-color: #9b59b6;
         }
         body { 
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; 
@@ -33,7 +34,7 @@
         }
         .item-icon { font-size: 42px; margin-bottom: 8px; }
         .item-name { font-size: 20px; font-weight: bold; color: #34495e; }
-        .item-hint { font-size: 13px; color: #95a5a6; margin-top: 6px; font-style: italic; }
+        .item-hint { font-size: 13px; color: #95a5a6; margin-top: 6px; }
         .timer-bar-container { width: 85%; height: 6px; background-color: #eee; border-radius: 3px; margin-top: 20px; overflow: hidden; }
         .timer-bar { height: 100%; width: 100%; background-color: var(--success-color); transition: width 0.1s linear; }
         
@@ -44,7 +45,7 @@
         .cabinet { 
             border-radius: 10px; padding: 15px; text-align: center; cursor: pointer; 
             border: 2px solid rgba(0,0,0,0.05); display: flex; flex-direction: column; align-items: center; justify-content: center; 
-            min-height: 90px; transition: all 0.2s; box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            min-height: 85px; transition: all 0.2s; box-shadow: 0 4px 6px rgba(0,0,0,0.05);
         }
         .cabinet:active { transform: scale(0.96); filter: brightness(0.9); }
         .cabinet-label { font-size: 14px; font-weight: bold; color: #fff; text-shadow: 1px 1px 2px rgba(0,0,0,0.3); }
@@ -56,7 +57,7 @@
         .btn-share { background-color: var(--success-color); color: white; }
         .shake { animation: shake 0.4s; }
         @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-8px); } 75% { transform: translateX(8px); } }
-        .toast { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(44, 62, 80, 0.95); color: #fff; padding: 15px 30px; border-radius: 10px; display: none; z-index: 2000; text-align: center; font-weight: bold; }
+        .toast { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(44, 62, 80, 0.95); color: #fff; padding: 15px 30px; border-radius: 10px; display: none; z-index: 2000; text-align: center; }
     </style>
 </head>
 <body>
@@ -69,7 +70,7 @@
     <div class="question-stage" id="stage">
         <div class="current-item" id="current-item">
             <div class="item-icon" id="item-icon">📦</div>
-            <div class="item-name" id="item-name">初始化中...</div>
+            <div class="item-name" id="item-name">准备中...</div>
             <div class="item-hint" id="item-hint"></div>
         </div>
         <div class="timer-bar-container"><div class="timer-bar" id="timer-bar"></div></div>
@@ -81,65 +82,66 @@
         <div class="modal-content">
             <h3 id="modal-title">提示</h3>
             <div id="modal-body" style="font-size:14px; line-height:1.6; margin-bottom:20px; text-align: left; color:#34495e;"></div>
-            <button class="btn btn-primary" id="modal-btn" onclick="closeModal()">知晓并继续</button>
-            <button class="btn btn-share" id="share-btn" style="display:none;" onclick="shareResult()">复制考核战报</button>
+            <button class="btn btn-primary" id="modal-btn" onclick="closeModal()">确认并继续</button>
+            <button class="btn btn-share" id="share-btn" style="display:none;" onclick="shareResult()">复制战报</button>
         </div>
     </div>
 
     <div class="toast" id="toast"></div>
 
 <script>
-    // --- 完整试剂库 (包含易制毒分类及柜体存放建议) ---
+    // --- 题库更新：酸碱拆分及易制毒分类 ---
     const masterChemicalDB = [
         // 第二类易制毒
-        { name: "三氯甲烷(氯仿)", type: "toxic", hint: "第二类易制毒化学品", desc: "【三氯甲烷】属于【第二类易制毒】化学品，具麻醉性。应存放于【毒麻/易制毒柜】，实行双人双锁管理。", icon: "😷" },
-        { name: "乙醚", type: "flammable", hint: "第二类易制毒化学品", desc: "【乙醚】属于【第二类易制毒】化学品，极易燃、易爆。应存放于【易燃防爆柜】，并严格落实易制毒管理规定。", icon: "🌫️" },
+        { name: "三氯甲烷(氯仿)", type: "toxic", hint: "第二类易制毒", desc: "【三氯甲烷】是【第二类易制毒】化学品，具麻醉性。应存放在【毒麻/易制毒柜】，双人双锁。", icon: "😷" },
+        { name: "乙醚", type: "flammable", hint: "第二类易制毒", desc: "【乙醚】是【第二类易制毒】化学品，极易燃。应存放在【易燃防爆柜】，严格执行易制毒台账记录。", icon: "🌫️" },
         
-        // 第三类易制毒
-        { name: "丙酮", type: "flammable", hint: "第三类易制毒化学品", desc: "【丙酮】属于【第三类易制毒】化学品，极易燃。应存放于【易燃防爆柜】。", icon: "🛢️" },
-        { name: "浓硫酸", type: "corrosive", hint: "第三类易制毒化学品", desc: "【浓硫酸】属于【第三类易制毒】化学品，强腐蚀性。应存放于【强酸碱腐蚀柜】。", icon: "🔥" },
-        { name: "盐酸", type: "corrosive", hint: "第三类易制毒化学品", desc: "【盐酸】属于【第三类易制毒】化学品，强腐蚀性且易挥发。应存放于【强酸碱腐蚀柜】。", icon: "🧪" },
-        { name: "甲苯", type: "flammable", hint: "第三类易制毒化学品", desc: "【甲苯】属于【第三类易制毒】化学品，易燃液体。应存放于【易燃防爆柜】。", icon: "🧪" },
+        // 第三类易制毒 + 酸类隔离
+        { name: "浓硫酸", type: "acid", hint: "第三类易制毒/强酸", desc: "【浓硫酸】是【第三类易制毒】化学品。具有强腐蚀性，必须存放于【强酸防腐蚀柜】，严禁与强碱混放。", icon: "🔥" },
+        { name: "盐酸", type: "acid", hint: "第三类易制毒/强酸", desc: "【盐酸】是【第三类易制毒】化学品。挥发性强。必须存放于【强酸防腐蚀柜】，严禁与强碱及次氯酸钠混放。", icon: "🧪" },
+        { name: "丙酮", type: "flammable", hint: "第三类易制毒", desc: "【丙酮】是【第三类易制毒】化学品。极易燃。应存放于【易燃防爆柜】。", icon: "🛢️" },
+        { name: "甲苯", type: "flammable", hint: "第三类易制毒", desc: "【甲苯】是【第三类易制毒】化学品。易燃液体。应存放于【易燃防爆柜】。", icon: "🧪" },
 
-        // 易燃类
-        { name: "二甲苯", type: "flammable", hint: "病理透明剂", desc: "【二甲苯】易燃且具神经毒性，应存放于【易燃防爆柜】。", icon: "🌫️" },
-        { name: "无水乙醇", type: "flammable", hint: "高纯酒精", desc: "【无水乙醇】极易燃，应远离火源，存放于【易燃防爆柜】。", icon: "🍾" },
-        { name: "甲醇", type: "flammable", hint: "色谱纯/脱水剂", desc: "【甲醇】易燃且具剧毒性，应存放于【易燃防爆柜】。", icon: "☠️" },
-        { name: "异丙醇", type: "flammable", hint: "沉淀常用", desc: "【异丙醇】易燃，蒸汽可引起头晕，应存放于【易燃防爆柜】。", icon: "🧪" },
-        { name: "冰乙酸", type: "flammable", hint: "强刺激性乙酸", desc: "【冰乙酸】闪点低，属于易燃液体，应存放于【易燃防爆柜】。", icon: "🧊" },
+        // 强酸类 (Acid)
+        { name: "浓硝酸", type: "acid", hint: "强氧化性酸", desc: "【浓硝酸】具强氧化性和强腐蚀性。应存放于【强酸防腐蚀柜】或氧化剂柜。严禁与碱或有机物接触。", icon: "💨" },
+        { name: "三氯乙酸", type: "acid", hint: "蛋白沉淀常用酸", desc: "【三氯乙酸】是有机强酸。应存放于【强酸防腐蚀柜】。", icon: "☢️" },
+        { name: "冰乙酸", type: "flammable", hint: "有机酸/易燃", desc: "【冰乙酸】虽是酸，但其闪点低。应存放于【易燃防爆柜】（远离强氧化剂）。", icon: "🧊" },
 
-        // 氧化类
-        { name: "双氧水30%", type: "oxidizer", hint: "过氧化氢", desc: "【双氧水】强氧化剂，严禁与还原剂、易燃物混放，应存放于【氧化剂专柜】。", icon: "💧" },
-        { name: "浓硝酸", type: "oxidizer", hint: "强氧化酸", desc: "【浓硝酸】具强氧化性，遇有机物易自燃，应存放于【氧化剂专柜】。", icon: "💨" },
-        { name: "次氯酸钠", type: "oxidizer", hint: "有效氯消毒剂", desc: "【次氯酸钠】强氧化剂，严禁与强酸混放，应存放于【氧化剂专柜】。", icon: "🧼" },
+        // 强碱类 (Base)
+        { name: "氢氧化钠", type: "base", hint: "强碱/烧碱", desc: "【氢氧化钠】强腐蚀性碱。应存放于【强碱防腐蚀柜】，与强酸物理隔离存储。", icon: "⚪" },
+        { name: "氢氧化钾", type: "base", hint: "强碱", desc: "【氢氧化钾】强腐蚀性。应存放于【强碱防腐蚀柜】。", icon: "⚪" },
+        { name: "氨水", type: "base", hint: "挥发性碱/毒害", desc: "【氨水】挥发性极强，具腐蚀性。应存放于【强碱防腐蚀柜】并确保通风良好。", icon: "💨" },
 
-        // 腐蚀类
-        { name: "氢氧化钠", type: "corrosive", hint: "苛性钠/强碱", desc: "【氢氧化钠】极强腐蚀性，应存放于【强酸碱腐蚀柜】。", icon: "⚪" },
-        { name: "氢氧化钾", type: "corrosive", hint: "强碱", desc: "【氢氧化钾】极强腐蚀性，应存放于【强酸碱腐蚀柜】。", icon: "⚪" },
-        { name: "甲醛", type: "corrosive", hint: "固定液/致癌", desc: "【甲醛】具腐蚀性和毒性，应存放于通风良好的【强酸碱腐蚀柜】。", icon: "🫙" },
-        { name: "多聚甲醛", type: "corrosive", hint: "PFA", desc: "【多聚甲醛】分解释放甲醛气，应存放于【强酸碱腐蚀柜】。", icon: "❄️" },
-        { name: "戊二醛", type: "corrosive", hint: "电镜固定剂", desc: "【戊二醛】强刺激性，应存放于【强酸碱腐蚀柜】。", icon: "🔬" },
-        { name: "福尔马林", type: "corrosive", hint: "甲醛溶液", desc: "【福尔马林】具强腐蚀、强刺激性，应存放于【强酸碱腐蚀柜】。", icon: "🫙" },
-        { name: "三氯乙酸", type: "corrosive", hint: "有机强酸", desc: "【三氯乙酸】强腐蚀性，应存放于【强酸碱腐蚀柜】。", icon: "☢️" },
-        { name: "氨水", type: "corrosive", hint: "挥发性强碱", desc: "【氨水】挥发性极强，具腐蚀性，应存放于【强酸碱腐蚀柜】且加强通风。", icon: "💨" },
+        // 易燃类 (Flammable)
+        { name: "无水乙醇", type: "flammable", hint: "高纯酒精", desc: "【无水乙醇】极易燃。应存放于【易燃防爆柜】，远离火源。", icon: "🍾" },
+        { name: "二甲苯", type: "flammable", hint: "脱蜡剂", desc: "【二甲苯】易燃，蒸汽有害。应存放于【易燃防爆柜】。", icon: "🌫️" },
+        { name: "异丙醇", type: "flammable", hint: "有机溶剂", desc: "【异丙醇】易燃液体。应存放于【易燃防爆柜】。", icon: "🧪" },
+        { name: "甲醇", type: "flammable", hint: "溶剂/致盲", desc: "【甲醇】易燃且具剧毒性。应存放于【易燃防爆柜】。", icon: "☠️" },
 
-        // 毒害/还原类
-        { name: "丙烯酰胺", type: "toxic", hint: "制胶原料/神经毒", desc: "【丙烯酰胺】强神经毒素，应存放于【毒麻/易制毒柜】加锁管理。", icon: "🧱" },
-        { name: "DMSO", type: "toxic", hint: "渗透性极强", desc: "【DMSO】透皮吸收性强，应存放于【毒麻/易制毒柜】或专用橱柜。", icon: "💧" },
-        { name: "TEMED", type: "reducer", hint: "促凝/强还原剂", desc: "【TEMED】属于强还原剂，具恶臭，应存放于【还原剂专柜】。", icon: "🐟" },
-        { name: "β-巯基乙醇", type: "reducer", hint: "强还原/恶臭", desc: "【β-巯基乙醇】强还原剂，有毒且臭，应存放于【还原剂专柜】。", icon: "🦨" }
+        // 氧化剂 (Oxidizer)
+        { name: "双氧水30%", type: "oxidizer", hint: "强氧化剂", desc: "【双氧水】氧化性极强。应存放于【氧化剂专柜】。严禁与还原剂、易燃物、强酸混放。", icon: "💧" },
+        { name: "次氯酸钠", type: "oxidizer", hint: "含氯氧化剂", desc: "【次氯酸钠】氧化剂。应存放于【氧化剂专柜】。千万不可与盐酸混放（产氯气）。", icon: "🧼" },
+
+        // 其他分类
+        { name: "甲醛", type: "toxic", hint: "致癌/固定液", desc: "【甲醛】具毒性及腐蚀性。应存放于【毒麻/易制毒柜】或通风良好的专用试剂柜。", icon: "🫙" },
+        { name: "丙烯酰胺", type: "toxic", hint: "神经毒素", desc: "【丙烯酰胺】强神经毒素。应存放于【毒麻/易制毒柜】，加锁管理。", icon: "🧱" },
+        { name: "DMSO", type: "toxic", hint: "极强渗透性", desc: "【DMSO】虽低毒但能携带毒物入体。应存放于【毒麻/易制毒柜】。", icon: "💧" },
+        { name: "TEMED", type: "reducer", hint: "促凝/强还原", desc: "【TEMED】强还原剂。应存放于【还原剂专柜】。严禁与氧化剂接触。", icon: "🐟" },
+        { name: "β-巯基乙醇", type: "reducer", hint: "还原/极臭", desc: "【β-巯基乙醇】还原剂，有毒。应存放于【还原剂专柜】。", icon: "🦨" },
+        { name: "戊二醛", type: "toxic", hint: "电镜固定剂", desc: "【戊二醛】强刺激性。应存放于【毒麻/易制毒柜】或通风腐蚀柜。", icon: "🔬" }
     ];
 
     const cabinetDB = [
         { id: "flammable", name: "易燃防爆柜", bg: "#f1c40f" },
         { id: "oxidizer", name: "氧化剂专柜", bg: "#95a5a6" },
         { id: "reducer", name: "还原剂专柜", bg: "#8e44ad" },
-        { id: "corrosive", name: "强酸碱腐蚀柜", bg: "#3498db" },
+        { id: "acid", name: "强酸防腐蚀柜", bg: "#3498db" },
+        { id: "base", name: "强碱防腐蚀柜", bg: "#9b59b6" },
         { id: "toxic", name: "毒麻/易制毒柜", bg: "#e74c3c" }
     ];
 
     let score = 0, lives = 2, queue = [], currentItem = null, timerInterval, timeLeft = 100, isGameOver = false;
-    let totalRounds = 20; // 设定每局20道随机题
+    let totalRounds = 20; 
     let startTime;
 
     function initGame() {
@@ -148,7 +150,6 @@
         document.getElementById('score').innerText = score;
         document.getElementById('lives').innerText = "❤️❤️";
         renderCabinets();
-        // 随机逻辑修改：从总库随机抽取20个
         let fullPool = [...masterChemicalDB].sort(() => Math.random() - 0.5);
         queue = fullPool.slice(0, totalRounds);
         updateProgress();
@@ -179,9 +180,9 @@
         const timerBar = document.getElementById('timer-bar');
         timerInterval = setInterval(() => {
             if(isGameOver) return;
-            timeLeft -= 1.2; 
+            timeLeft -= 1.3; 
             timerBar.style.width = timeLeft + '%';
-            if (timeLeft <= 0) { clearInterval(timerInterval); handleMistake(null, "操作超时！未在规定时间内正确归位。"); }
+            if (timeLeft <= 0) { clearInterval(timerInterval); handleMistake(null, "操作超时！未及时归位。"); }
         }, 100);
     }
 
@@ -194,13 +195,18 @@
         clearInterval(timerInterval);
         if (currentItem.type === cabinetId) {
             score += 10; document.getElementById('score').innerText = score;
-            showToast("✅ 入库正确！+10");
+            showToast("✅ 分类正确！+10");
             setTimeout(nextQuestion, 400);
         } else {
-            const isFatal = (currentItem.type === 'oxidizer' && (cabinetId === 'flammable' || cabinetId === 'reducer')) || (currentItem.type === 'reducer' && cabinetId === 'oxidizer');
+            // 酸碱混放及氧化/还原混放逻辑判定
+            const isFatal = (currentItem.type === 'acid' && cabinetId === 'base') || 
+                            (currentItem.type === 'base' && cabinetId === 'acid') ||
+                            (currentItem.type === 'oxidizer' && (cabinetId === 'flammable' || cabinetId === 'reducer')) ||
+                            (currentItem.type === 'reducer' && cabinetId === 'oxidizer');
+            
             let msg = `<b>判定错误：</b>【${currentItem.name}】位置错误。<br><br><b>规范要求：</b>${currentItem.desc}`;
             if (isFatal) {
-                msg = `<span style="color:red;font-weight:bold">🔥 重大事故警告：</span>氧化剂严禁与易燃/还原剂混放！<br><br>${currentItem.desc}`;
+                msg = `<span style="color:red;font-weight:bold">🔥 重大违规事故：</span>严禁将酸碱或氧化/还原剂混放！化学反应风险极大。<br><br>${currentItem.desc}`;
                 triggerGameOver(false, msg);
             } else {
                 handleMistake(el, msg);
@@ -232,7 +238,7 @@
     function triggerGameOver(win, msg) {
         isGameOver = true; clearInterval(timerInterval);
         const title = win ? "考核通过 ✅" : "考核不合格 ❌";
-        const content = win ? `恭喜！你已完成 20 道危化品及易制毒分类题目。<br><b>最终得分：${score} 分</b>` : msg;
+        const content = win ? `恭喜！你成功完成了 20 道安全分类题目。<br><b>最终得分：${score} 分</b>` : msg;
         showModal(title, content);
         document.getElementById('share-btn').style.display = 'block';
         document.getElementById('modal-btn').innerText = "重新开始";
@@ -242,11 +248,9 @@
     function shareResult() {
         const now = new Date();
         const duration = Math.floor((now - startTime) / 1000);
-        const status = lives > 0 ? "合格 (Safe)" : "不合格 (Hazard)";
-        const shareText = `【实验室安全考核战报】\n日期：${now.toLocaleDateString()}\n考核状态：${status}\n最终得分：${score}分\n考核用时：${duration}秒\n重点知识：已掌握第二类(氯仿、乙醚)及第三类易制毒化学品分类存储规范！`;
-        
+        const shareText = `【实验室安全考核战报】\n日期：${now.toLocaleDateString()}\n考核得分：${score}分\n总计用时：${duration}秒\n安全勋章：已掌握酸碱隔离存储及易制毒分类管控标准！`;
         if (navigator.clipboard) {
-            navigator.clipboard.writeText(shareText).then(() => alert("战报已复制！快去微信朋友圈或工作群粘贴打卡吧。"));
+            navigator.clipboard.writeText(shareText).then(() => alert("战报复制成功！快去打卡吧。"));
         } else {
             alert(shareText);
         }
