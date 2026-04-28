@@ -159,6 +159,26 @@
 
     <div class="toast" id="toast">提示信息</div>
 
+// 请将这里的 URL 替换为你第一阶段最后一步复制的阿里云公网地址
+const ALIYUN_API_URL = "https://chemicals-lqebplhkce.cn-hangzhou.fcapp.run";
+
+function sendStats(score, status, actionType) {
+    fetch(ALIYUN_API_URL, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            score: score,
+            status: status,
+            actionType: actionType
+        })
+    }).catch(err => {
+        // 静默处理错误，保证前端考核流程不被中断
+        console.log("上报请求未完成", err);
+    });
+}
+
 <script>
     // --- 临床与基础医学 深度考核题库 ---
     const masterChemicalDB = [
@@ -237,6 +257,7 @@
         
         updateProgress();
         nextQuestion();
+        sendStats(0, "考核进行中", "页面访问");
     }
 
     function renderCabinets() {
@@ -256,6 +277,8 @@
         clearInterval(timerInterval);
         if (queue.length === 0) {
             triggerGameOver(true);
+           let finalStatus = isWin ? "考核通过" : (isFatal ? "严重事故终止" : "常规容错耗尽");
+sendStats(score, finalStatus, "考核结束");
             return;
         }
         
