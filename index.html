@@ -90,28 +90,41 @@
     <div class="toast" id="toast">提示</div>
 
 <script>
-    // --- 完整题库 ---
+    // --- 完整扩充题库 (共24种) ---
     const masterChemicalDB = [
+        // 易制毒 / 剧毒类
         { name: "三氯甲烷(氯仿)", type: "toxic", hint: "二类易制毒", desc: "【二类易制毒】。具麻醉性。应存放在【毒麻/易制毒柜】。", icon: "😷" },
-        { name: "乙醚", type: "flammable", hint: "二类易制毒", desc: "【二类易制毒】。极易燃。应存放在【易燃防爆柜】。", icon: "🌫️" },
+        { name: "丙烯酰胺", type: "toxic", hint: "神经毒素", desc: "强神经毒素。应存放于【毒麻/易制毒柜】。", icon: "🧱" },
+        { name: "DMSO", type: "toxic", hint: "极强渗透", desc: "能携带毒物透皮。应存放于【毒麻/易制毒柜】。", icon: "💧" },
+        { name: "甲醛", type: "toxic", hint: "固定液", desc: "具毒性、致癌性。应存放于【毒麻/易制毒柜】。", icon: "🫙" },
+        { name: "苯甲基磺酰氟(PMSF)", type: "toxic", hint: "蛋白酶抑制剂", desc: "【剧毒】。对呼吸道、皮肤有剧烈破坏性。应存放于【毒麻/易制毒柜】。", icon: "☠️" },
+        
+        // 强酸类
         { name: "浓硫酸", type: "acid", hint: "三类易制毒/强酸", desc: "【三类易制毒】。强腐蚀。必须存放于【强酸防腐蚀柜】，严禁与碱混放。", icon: "🔥" },
         { name: "盐酸", type: "acid", hint: "三类易制毒/强酸", desc: "【三类易制毒】。挥发性强。必须存放于【强酸防腐蚀柜】，严禁与碱及次氯酸钠混放。", icon: "🧪" },
-        { name: "丙酮", type: "flammable", hint: "三类易制毒", desc: "【三类易制毒】。极易燃。应存放于【易燃防爆柜】。", icon: "🛢️" },
-        { name: "甲苯", type: "flammable", hint: "三类易制毒", desc: "【三类易制毒】。易燃。应存放于【易燃防爆柜】。", icon: "🧪" },
         { name: "浓硝酸", type: "acid", hint: "氧化性强酸", desc: "具强氧化性及腐蚀性。应存放于【强酸防腐蚀柜】。严禁接触有机物。", icon: "💨" },
         { name: "三氯乙酸", type: "acid", hint: "有机强酸", desc: "具高腐蚀性。应存放于【强酸防腐蚀柜】。", icon: "☢️" },
+
+        // 强碱类
         { name: "氢氧化钠", type: "base", hint: "强碱/烧碱", desc: "强腐蚀性碱。应存放于【强碱防腐蚀柜】，酸碱必须物理隔离存储。", icon: "⚪" },
         { name: "氢氧化钾", type: "base", hint: "强碱", desc: "极强腐蚀性。应存放于【强碱防腐蚀柜】。", icon: "⚪" },
         { name: "氨水", type: "base", hint: "挥发性碱", desc: "挥发性强。应存放于【强碱防腐蚀柜】并加强通风。", icon: "💨" },
+        
+        // 易燃类 (含染液)
+        { name: "乙醚", type: "flammable", hint: "二类易制毒", desc: "【二类易制毒】。极易燃。应存放在【易燃防爆柜】。", icon: "🌫️" },
+        { name: "丙酮", type: "flammable", hint: "三类易制毒", desc: "【三类易制毒】。极易燃。应存放于【易燃防爆柜】。", icon: "🛢️" },
+        { name: "甲苯", type: "flammable", hint: "三类易制毒", desc: "【三类易制毒】。易燃。应存放于【易燃防爆柜】。", icon: "🧪" },
         { name: "无水乙醇", type: "flammable", hint: "高纯酒精", desc: "极易燃。应存放于【易燃防爆柜】。", icon: "🍾" },
         { name: "二甲苯", type: "flammable", hint: "脱蜡剂", desc: "易燃，蒸汽有害。应存放于【易燃防爆柜】。", icon: "🌫️" },
+        { name: "吉姆萨(Giemsa)染液", type: "flammable", hint: "染色体/血液涂片", desc: "【易燃品】。通常以甲醇和甘油为溶剂，极易燃且具一定毒性。应存放于【易燃防爆柜】。", icon: "🩸" },
+        { name: "苏木精-伊红(H&E)", type: "flammable", hint: "常规病理染色", desc: "【易燃品】。染色及分化脱水常使用大量高浓度乙醇/甲醇。应存放于【易燃防爆柜】。", icon: "🧫" },
+        { name: "考马斯亮蓝染液", type: "flammable", hint: "蛋白凝胶染色", desc: "【易燃品】。染液与脱色液中含有大量甲醇、乙醇和冰乙酸，极易燃。应存放于【易燃防爆柜】。", icon: "🟦" },
+
+        // 氧化/还原
         { name: "双氧水30%", type: "oxidizer", hint: "强氧化剂", desc: "强氧化性。应存放于【氧化剂专柜】。严禁混放易燃物。", icon: "💧" },
         { name: "次氯酸钠", type: "oxidizer", hint: "含氯氧化剂", desc: "氧化剂。应存放于【氧化剂专柜】。严禁接触盐酸。", icon: "🧼" },
-        { name: "丙烯酰胺", type: "toxic", hint: "神经毒素", desc: "强神经毒素。应存放于【毒麻/易制毒柜】。", icon: "🧱" },
-        { name: "DMSO", type: "toxic", hint: "极强渗透", desc: "能携带毒物透皮。应存放于【毒麻/易制毒柜】。", icon: "💧" },
         { name: "TEMED", type: "reducer", hint: "强还原剂", desc: "强还原剂。应存放于【还原剂专柜】。严禁接触氧化剂。", icon: "🐟" },
-        { name: "β-巯基乙醇", type: "reducer", hint: "还原/臭", desc: "强还原，有毒。应存放于【还原剂专柜】。", icon: "🦨" },
-        { name: "甲醛", type: "toxic", hint: "固定液", desc: "具毒性、致癌性。应存放于【毒麻/易制毒柜】。", icon: "🫙" }
+        { name: "β-巯基乙醇", type: "reducer", hint: "还原/臭", desc: "强还原，有毒。应存放于【还原剂专柜】。", icon: "🦨" }
     ];
 
     const cabinetDB = [
@@ -126,16 +139,16 @@
     const adviceDB = {
         acid: "建议强化【强酸类】试剂的隔离存放意识，特别是盐酸与硝酸的强腐蚀与挥发性风险，严禁与碱类混放。",
         base: "建议复习【强碱类】试剂的管控标准，牢记酸碱必须严格进行物理隔离存储，防止中和放热反应。",
-        flammable: "【易燃品】防爆意识有待提升，请着重复习闪点极低有机溶剂（如丙酮、乙醚）的管理规范。",
+        flammable: "【易燃品】防爆意识有待提升，请着重复习极易燃溶剂及各类醇基染液（H&E、吉姆萨、考马斯亮蓝等）的管理规范。",
         oxidizer: "需加强【强氧化剂】（如双氧水、次氯酸钠）的学习，严禁将其与易燃物、还原剂混放，谨防爆炸。",
         reducer: "对【强还原剂】（如TEMED、β-巯基乙醇）的特性掌握不足，请注意其与氧化剂混放的自燃/爆炸风险。",
-        toxic: "需牢记【毒麻/易制毒】化学品（如氯仿、丙烯酰胺、第三类易制毒酸碱等）的双人双锁及专柜保管制度。"
+        toxic: "需牢记【毒麻/易制毒及剧毒品】（如氯仿、PMSF、丙烯酰胺等）的专柜保管制度及操作防护规范。"
     };
 
     // --- 核心全局变量 ---
     let stats = {}, encountered = {};
     let score = 0, lives = 2, queue = [], currentItem = null, timerInterval, timeLeft = 100;
-    let isGameOver = false, isProcessing = false; // 增加防连点机制
+    let isGameOver = false, isProcessing = false; 
     let totalRounds = 20, startTime, finalAdviceText = "";
 
     function initGame() {
@@ -149,6 +162,7 @@
         
         renderCabinets();
         
+        // 随机抽取20道题
         let fullPool = [...masterChemicalDB].sort(() => Math.random() - 0.5);
         queue = fullPool.slice(0, totalRounds);
         
@@ -171,7 +185,7 @@
 
     function nextQuestion() {
         clearInterval(timerInterval);
-        isProcessing = false; // 释放锁
+        isProcessing = false; 
         
         if (queue.length === 0) return triggerGameOver(true);
         
@@ -190,13 +204,16 @@
         
         timerInterval = setInterval(() => {
             if(isGameOver || isProcessing) return;
-            timeLeft -= 1.4; 
+            
+            // 15秒倒计时逻辑：100% / 150(次) ≈ 0.667% (每100ms扣除)
+            timeLeft -= 0.667; 
+            
             timerBar.style.width = Math.max(0, timeLeft) + '%';
             if (timeLeft < 30) timerBar.style.backgroundColor = 'var(--danger-color)';
             
             if (timeLeft <= 0) { 
                 clearInterval(timerInterval); 
-                isProcessing = true; // 锁定操作
+                isProcessing = true; 
                 handleMistake(null, "未在规定时间内进行入库操作，该试剂已计入违规。"); 
             }
         }, 100);
@@ -207,9 +224,9 @@
     }
 
     function tryPlace(cabinetId, el) {
-        if (!currentItem || isGameOver || isProcessing) return; // 拦截非法规操作
+        if (!currentItem || isGameOver || isProcessing) return; 
         
-        isProcessing = true; // 锁定当前流程，防止双击
+        isProcessing = true; 
         clearInterval(timerInterval);
         
         if (currentItem.type === cabinetId) {
@@ -217,7 +234,7 @@
             stats[currentItem.type]++; 
             document.getElementById('score').innerText = score;
             showToast("✅ 分类正确！+10分");
-            setTimeout(nextQuestion, 400); // 延迟进入下一题
+            setTimeout(nextQuestion, 400); 
         } else {
             const isFatal = (currentItem.type === 'acid' && cabinetId === 'base') || 
                             (currentItem.type === 'base' && cabinetId === 'acid') ||
@@ -244,7 +261,7 @@
             if(el) el.classList.remove('shake'); 
         }, 400);
         
-        if (lives < 0) { // 调整为小于0时触发结束，确保有2次完整容错
+        if (lives < 0) { 
             triggerGameOver(false, msg); 
         } else {
             showModal("操作违规警示", msg);
@@ -278,7 +295,6 @@
         isGameOver = true; 
         clearInterval(timerInterval);
         
-        // --- 核心诊断逻辑：即使报错也不会卡死 ---
         let lowestRate = 1.1; 
         let worstCat = "";
         
@@ -334,15 +350,14 @@
             let honor = maxRate >= 1 ? `【${bestCat}大师】` : `【安全防线守卫者】`;
             if (!bestCat) { bestCat = "暂无数据"; honor = "【见习安全员】"; maxRate = 0; }
             
-            const shareText = `【实验室安全考核：专属动态战报】\n日期：${now.toLocaleDateString()}\n考核状态：${status}\n最终得分：${score}分\n考核用时：${duration}秒\n能力评估：我表现最出色的是[${bestCat}]，正确率达${Math.round(maxRate*100)}%！\n授予称号：${honor}\n\n系统诊断建议：\n${finalAdviceText}\n\n我已经掌握易制毒分级及酸碱隔离存储规范，快来测测你的基本功！`;
+            const shareText = `【实验室安全考核：专属动态战报】\n日期：${now.toLocaleDateString()}\n考核状态：${status}\n最终得分：${score}分\n用时：${duration}秒\n强项：最擅长[${bestCat}]，正确率达${Math.round(maxRate*100)}%！\n称号：${honor}\n\n诊断建议：\n${finalAdviceText}\n\n已掌握易制毒分级及高危试剂存放规范，快来挑战！`;
             
-            executeFallback(shareText); // 直接使用最稳定的降级复制方案
+            executeFallback(shareText); 
         } catch(e) {
             alert("生成战报时发生异常，请检查浏览器设置。");
         }
     }
 
-    // --- 全兼容的降级复制方案 ---
     function executeFallback(text) {
         const textArea = document.createElement("textarea");
         textArea.value = text;
@@ -355,18 +370,17 @@
         try {
             const successful = document.execCommand('copy');
             if (successful) {
-                alert("动态战报已生成并成功复制！\n快去微信班级群或朋友圈粘贴打卡吧。");
+                alert("战报已成功复制！\n快去微信班级群或朋友圈粘贴打卡吧。");
             } else {
                 throw new Error("Copy command rejected");
             }
         } catch (err) {
-            alert("由于浏览器安全限制复制失败，请您手动长按下方文本复制分享：\n\n" + text);
+            alert("由于浏览器限制复制失败，请手动长按下方文本复制：\n\n" + text);
         } finally {
             document.body.removeChild(textArea);
         }
     }
 
-    // 启动引擎
     window.onload = initGame;
 </script>
 </body>
