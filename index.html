@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>实验室安全：智能分类考核系统</title>
+    <script src="https://cdn.bootcdn.net/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
         :root { 
             --primary-color: #2c3e50; --bg-color: #f4f7f6; --danger-color: #e74c3c; 
@@ -45,12 +46,22 @@
         }
         .cabinet:active { transform: scale(0.94); filter: brightness(0.9); }
         .cabinet-label { font-size: 14px; font-weight: bold; color: #fff; text-shadow: 1px 1px 2px rgba(0,0,0,0.3); }
+        
         .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.85); display: none; justify-content: center; align-items: center; z-index: 1000; flex-direction: column; }
-        .modal-content { background: white; padding: 25px; border-radius: 16px; width: 88%; max-width: 340px; text-align: center; }
+        .modal-content { background: white; padding: 25px; border-radius: 16px; width: 88%; max-width: 340px; text-align: center; position: relative; }
+        
+        /* 姓名输入框样式 */
+        .name-input { width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 8px; font-size: 16px; text-align: center; margin-bottom: 20px; box-sizing: border-box; }
+        .name-input:focus { border-color: var(--primary-color); outline: none; }
+
         .btn { padding: 14px 20px; border: none; border-radius: 10px; font-size: 16px; cursor: pointer; width: 100%; font-weight: bold; margin-bottom: 12px; transition: opacity 0.2s; }
         .btn:active { opacity: 0.8; }
         .btn-primary { background-color: var(--primary-color); color: white; }
+        .btn-secondary { background-color: #ecf0f1; color: #2c3e50; }
         .btn-share { background-color: var(--success-color); color: white; }
+        .btn-image { background-color: #f39c12; color: white; }
+        .btn:disabled { background-color: #95a5a6; cursor: not-allowed; }
+
         .shake { animation: shake 0.4s; }
         @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-8px); } 75% { transform: translateX(8px); } }
         .toast { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(44, 62, 80, 0.95); color: #fff; padding: 15px 30px; border-radius: 10px; display: none; z-index: 2000; text-align: center; font-weight: bold; }
@@ -58,6 +69,28 @@
         .advice-panel { margin-top:15px; padding:12px; border-radius:8px; font-size:13px; text-align:left; line-height:1.5; }
         .advice-warning { background:#fff3cd; color:#856404; border: 1px solid #ffeeba; }
         .advice-success { background:#d4edda; color:#155724; border: 1px solid #c3e6cb; }
+
+        /* --- 生成海报专用隐藏样式 --- */
+        #cert-container {
+            position: absolute; left: -9999px; top: 0; 
+            width: 375px; background: linear-gradient(135deg, #fdfbfb 0%, #ebedee 100%);
+            padding: 30px; box-sizing: border-box; border: 8px solid var(--primary-color);
+            font-family: "PingFang SC", "Microsoft YaHei", sans-serif; color: #333;
+        }
+        .cert-header { text-align: center; border-bottom: 2px dashed #ccc; padding-bottom: 15px; margin-bottom: 20px; }
+        .cert-title { font-size: 24px; font-weight: bold; color: var(--primary-color); margin: 0; }
+        .cert-subtitle { font-size: 12px; color: #7f8c8d; margin-top: 5px; }
+        .cert-score-box { text-align: center; margin-bottom: 20px; }
+        .cert-score { font-size: 60px; font-weight: bold; color: #f39c12; margin: 0; line-height: 1; text-shadow: 1px 1px 2px rgba(0,0,0,0.1); }
+        .cert-status { font-size: 18px; font-weight: bold; margin-top: 5px; }
+        .status-pass { color: var(--success-color); }
+        .status-fail { color: var(--danger-color); }
+        .cert-info { background: #fff; padding: 15px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); margin-bottom: 15px; }
+        .cert-row { display: flex; justify-content: space-between; font-size: 14px; margin-bottom: 8px; border-bottom: 1px solid #eee; padding-bottom: 8px; }
+        .cert-row:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+        .cert-label { color: #7f8c8d; }
+        .cert-val { font-weight: bold; }
+        .cert-footer { text-align: center; font-size: 12px; color: #bdc3c7; margin-top: 20px; }
     </style>
 </head>
 <body>
@@ -70,8 +103,8 @@
     <div class="question-stage" id="stage">
         <div class="current-item" id="current-item">
             <div class="item-icon" id="item-icon">📦</div>
-            <div class="item-name" id="item-name">载入中...</div>
-            <div class="item-hint" id="item-hint">正在配置题库</div>
+            <div class="item-name" id="item-name">初始化中...</div>
+            <div class="item-hint" id="item-hint">正在抽取题目</div>
         </div>
         <div class="timer-bar-container"><div class="timer-bar" id="timer-bar"></div></div>
     </div>
@@ -82,48 +115,78 @@
         <div class="modal-content">
             <h3 id="modal-title">提示</h3>
             <div id="modal-body" style="font-size:14px; line-height:1.6; margin-bottom:20px; text-align: left; color:#34495e;"></div>
+            
             <button class="btn btn-primary" id="modal-btn" onclick="closeModal()">知晓并继续</button>
-            <button class="btn btn-share" id="share-btn" style="display:none;" onclick="shareResult()">复制包含建议的战报</button>
+            
+            <div id="end-game-actions" style="display:none; flex-direction:column; gap:8px;">
+                <button class="btn btn-image" id="open-name-btn" onclick="openNameModal()" style="margin-bottom:0;">✍️ 输入姓名生成专属证书</button>
+                <div style="display:flex; gap:8px;">
+                    <button class="btn btn-primary" style="margin-bottom:0;" onclick="location.reload()">再测一次</button>
+                    <button class="btn btn-share" style="margin-bottom:0;" onclick="shareTextResult()">📋 复制文字战报</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="name-modal" style="z-index: 1001;">
+        <div class="modal-content">
+            <h3 style="color:var(--primary-color); margin-top:0;">🎖️ 颁发安全证书</h3>
+            <p style="font-size:14px; color:#7f8c8d; margin-bottom:20px;">请输入您的姓名或学号，系统将为您生成专属的考核评定海报以供分享。</p>
+            <input type="text" id="player-name-end" class="name-input" placeholder="例如：张三 / 20230101" maxlength="15">
+            <div style="display:flex; gap:10px;">
+                <button class="btn btn-image" id="gen-img-confirm-btn" onclick="confirmAndGenerateImage()" style="margin-bottom:0;">确定并生成 📸</button>
+                <button class="btn btn-secondary" style="margin-bottom:0;" onclick="closeNameModal()">返回</button>
+            </div>
         </div>
     </div>
 
     <div class="toast" id="toast">提示</div>
 
+    <div id="cert-container">
+        <div class="cert-header">
+            <h2 class="cert-title">实验室安全考核战报</h2>
+            <div class="cert-subtitle">危化品智能分类评估记录</div>
+        </div>
+        <div class="cert-score-box">
+            <div class="cert-score" id="cert-score">100</div>
+            <div class="cert-status" id="cert-status">综合评定：合格</div>
+        </div>
+        <div class="cert-info">
+            <div class="cert-row"><span class="cert-label">考核人员：</span><span class="cert-val" id="cert-name">---</span></div>
+            <div class="cert-row"><span class="cert-label">考核用时：</span><span class="cert-val" id="cert-time">0秒</span></div>
+            <div class="cert-row"><span class="cert-label">安全称号：</span><span class="cert-val" id="cert-honor">---</span></div>
+            <div class="cert-row"><span class="cert-label">完成日期：</span><span class="cert-val" id="cert-date">---</span></div>
+        </div>
+        <div class="advice-panel advice-warning" id="cert-advice">系统综合评价：---</div>
+        <div class="cert-footer">- 强化安全红线意识，共筑平安实验室 -</div>
+    </div>
+
 <script>
     // --- 完整扩充题库 (共27种) ---
     const masterChemicalDB = [
-        // 易制毒 / 剧毒类
         { name: "三氯甲烷(氯仿)", type: "toxic", hint: "二类易制毒", desc: "【二类易制毒】。具麻醉性。应存放在【毒麻/易制毒柜】。", icon: "😷" },
         { name: "丙烯酰胺", type: "toxic", hint: "神经毒素", desc: "强神经毒素。应存放于【毒麻/易制毒柜】。", icon: "🧱" },
         { name: "DMSO", type: "toxic", hint: "极强渗透", desc: "能携带毒物透皮。应存放于【毒麻/易制毒柜】。", icon: "💧" },
         { name: "甲醛", type: "toxic", hint: "固定液", desc: "具毒性、致癌性。应存放于【毒麻/易制毒柜】。", icon: "🫙" },
-        { name: "苯甲基磺酰氟(PMSF)", type: "toxic", hint: "蛋白酶抑制剂", desc: "【剧毒】。对呼吸道、皮肤有剧烈破坏性。应存放于【毒麻/易制毒柜】。", icon: "☠️" },
-        { name: "苯酚", type: "toxic", hint: "透皮剧毒/腐蚀", desc: "具强腐蚀性和极强透皮毒性，能引起严重化学灼伤。应存放于【毒麻/易制毒柜】。", icon: "☠️" },
-        
-        // 强酸类
+        { name: "PMSF", type: "toxic", hint: "蛋白酶抑制剂", desc: "【剧毒】。对呼吸道、皮肤有剧烈破坏性。应存放于【毒麻/易制毒柜】。", icon: "☠️" },
+        { name: "苯酚", type: "toxic", hint: "透皮剧毒/腐蚀", desc: "具强腐蚀性和极强透皮毒性，能引起严重灼伤。应存放于【毒麻/易制毒柜】。", icon: "☠️" },
         { name: "浓硫酸", type: "acid", hint: "三类易制毒/强酸", desc: "【三类易制毒】。强腐蚀。必须存放于【强酸防腐蚀柜】，严禁与碱混放。", icon: "🔥" },
         { name: "盐酸", type: "acid", hint: "三类易制毒/强酸", desc: "【三类易制毒】。挥发性强。必须存放于【强酸防腐蚀柜】，严禁与碱及次氯酸钠混放。", icon: "🧪" },
         { name: "浓硝酸", type: "acid", hint: "氧化性强酸", desc: "具强氧化性及腐蚀性。应存放于【强酸防腐蚀柜】。严禁接触有机物。", icon: "💨" },
         { name: "三氯乙酸", type: "acid", hint: "有机强酸", desc: "具高腐蚀性。应存放于【强酸防腐蚀柜】。", icon: "☢️" },
-
-        // 强碱类
         { name: "氢氧化钠", type: "base", hint: "强碱/烧碱", desc: "强腐蚀性碱。应存放于【强碱防腐蚀柜】，酸碱必须物理隔离存储。", icon: "⚪" },
         { name: "氢氧化钾", type: "base", hint: "强碱", desc: "极强腐蚀性。应存放于【强碱防腐蚀柜】。", icon: "⚪" },
         { name: "氨水", type: "base", hint: "挥发性碱", desc: "挥发性强。应存放于【强碱防腐蚀柜】并加强通风。", icon: "💨" },
-        
-        // 易燃类
         { name: "乙醚", type: "flammable", hint: "二类易制毒", desc: "【二类易制毒】。极易燃。应存放在【易燃防爆柜】。", icon: "🌫️" },
         { name: "丙酮", type: "flammable", hint: "三类易制毒", desc: "【三类易制毒】。极易燃。应存放于【易燃防爆柜】。", icon: "🛢️" },
         { name: "甲苯", type: "flammable", hint: "三类易制毒", desc: "【三类易制毒】。易燃。应存放于【易燃防爆柜】。", icon: "🧪" },
         { name: "无水乙醇", type: "flammable", hint: "高纯酒精", desc: "极易燃。应存放于【易燃防爆柜】。", icon: "🍾" },
         { name: "二甲苯", type: "flammable", hint: "脱蜡剂", desc: "易燃，蒸汽有害。应存放于【易燃防爆柜】。", icon: "🌫️" },
         { name: "异丙醇", type: "flammable", hint: "核酸沉淀常用", desc: "极易燃液体，蒸汽具刺激性。应存放于【易燃防爆柜】。", icon: "🧪" },
-        { name: "冰醋酸", type: "flammable", hint: "有机酸/易燃", desc: "虽为有机酸但闪点较低，属于易燃液体。应存放于【易燃防爆柜】，严禁接触强氧化剂。", icon: "🧊" },
-        { name: "吉姆萨(Giemsa)染液", type: "flammable", hint: "染色体/血液涂片", desc: "【易燃品】。通常以甲醇和甘油为溶剂，极易燃且具一定毒性。应存放于【易燃防爆柜】。", icon: "🩸" },
-        { name: "苏木精-伊红(H&E)", type: "flammable", hint: "常规病理染色", desc: "【易燃品】。染色及分化脱水常使用大量高浓度乙醇/甲醇。应存放于【易燃防爆柜】。", icon: "🧫" },
-        { name: "考马斯亮蓝染液", type: "flammable", hint: "蛋白凝胶染色", desc: "【易燃品】。染液与脱色液中含有大量甲醇、乙醇和冰乙酸，极易燃。应存放于【易燃防爆柜】。", icon: "🟦" },
-
-        // 氧化/还原
+        { name: "冰醋酸", type: "flammable", hint: "有机酸/易燃", desc: "闪点较低，属于易燃液体。应存放于【易燃防爆柜】，严禁接触强氧化剂。", icon: "🧊" },
+        { name: "吉姆萨染液", type: "flammable", hint: "染色体/血液涂片", desc: "【易燃品】。通常以甲醇和甘油为溶剂。应存放于【易燃防爆柜】。", icon: "🩸" },
+        { name: "H&E染液", type: "flammable", hint: "常规病理染色", desc: "【易燃品】。使用大量高浓度乙醇/甲醇。应存放于【易燃防爆柜】。", icon: "🧫" },
+        { name: "考马斯亮蓝", type: "flammable", hint: "蛋白凝胶染色", desc: "【易燃品】。含大量甲醇、乙醇和冰乙酸，极易燃。应存放于【易燃防爆柜】。", icon: "🟦" },
         { name: "双氧水30%", type: "oxidizer", hint: "强氧化剂", desc: "强氧化性。应存放于【氧化剂专柜】。严禁混放易燃物。", icon: "💧" },
         { name: "次氯酸钠", type: "oxidizer", hint: "含氯氧化剂", desc: "氧化剂。应存放于【氧化剂专柜】。严禁接触盐酸。", icon: "🧼" },
         { name: "TEMED", type: "reducer", hint: "强还原剂", desc: "强还原剂。应存放于【还原剂专柜】。严禁接触氧化剂。", icon: "🐟" },
@@ -140,21 +203,22 @@
     ];
 
     const adviceDB = {
-        acid: "建议强化【强酸类】试剂的隔离存放意识，特别是盐酸与硝酸的强腐蚀与挥发性风险，严禁与碱类混放。",
-        base: "建议复习【强碱类】试剂的管控标准，牢记酸碱必须严格进行物理隔离存储，防止中和放热反应。",
-        flammable: "【易燃品】防爆意识有待提升，请着重复习极易燃溶剂及各类醇基染液（H&E、吉姆萨、考马斯亮蓝等）的管理规范。",
-        oxidizer: "需加强【强氧化剂】（如双氧水、次氯酸钠）的学习，严禁将其与易燃物、还原剂混放，谨防爆炸。",
-        reducer: "对【强还原剂】（如TEMED、β-巯基乙醇）的特性掌握不足，请注意其与氧化剂混放的自燃/爆炸风险。",
-        toxic: "需牢记【毒麻/易制毒及剧毒品】（如氯仿、苯酚、PMSF、丙烯酰胺等）的专柜保管制度及操作防护规范。"
+        acid: "建议强化【强酸类】试剂的隔离存放意识，严防强腐蚀与挥发性风险，严禁与碱类混放。",
+        base: "建议复习【强碱类】试剂管控标准，牢记酸碱必须严格物理隔离存储，防止中和放热反应。",
+        flammable: "【易燃品】防爆意识有待提升，请着重复习极易燃溶剂及各类醇基染液的管理规范。",
+        oxidizer: "需加强【强氧化剂】的学习，严禁将其与易燃物、还原剂混放，谨防爆炸。",
+        reducer: "对【强还原剂】特性掌握不足，请注意其与氧化剂混放的自燃/爆炸风险。",
+        toxic: "需牢记【毒麻/易制毒及剧毒品】的专柜保管制度及操作防护规范。"
     };
 
-    // --- 核心全局变量 ---
+    // 全局状态变量
     let stats = {}, encountered = {};
     let score = 0, lives = 2, queue = [], currentItem = null, timerInterval, timeLeft = 100;
     let isGameOver = false, isProcessing = false; 
-    let totalRounds = 20, startTime, finalAdviceText = "";
+    let totalRounds = 20, startTime, finalDuration = 0, finalAdviceText = "", finalHonor = "", finalStatus = "";
 
-    function initGame() {
+    // 页面加载完毕即直接开始游戏
+    window.onload = function initGame() {
         score = 0; lives = 2; isGameOver = false; isProcessing = false;
         stats = { flammable: 0, oxidizer: 0, reducer: 0, acid: 0, base: 0, toxic: 0 };
         encountered = { flammable: 0, oxidizer: 0, reducer: 0, acid: 0, base: 0, toxic: 0 };
@@ -171,7 +235,7 @@
         
         updateProgress();
         nextQuestion();
-    }
+    };
 
     function renderCabinets() {
         const container = document.getElementById('cabinets');
@@ -207,13 +271,9 @@
         
         timerInterval = setInterval(() => {
             if(isGameOver || isProcessing) return;
-            
-            // 15秒倒计时逻辑：100% / 150(次) ≈ 0.667% (每100ms扣除)
             timeLeft -= 0.667; 
-            
             timerBar.style.width = Math.max(0, timeLeft) + '%';
             if (timeLeft < 30) timerBar.style.backgroundColor = 'var(--danger-color)';
-            
             if (timeLeft <= 0) { 
                 clearInterval(timerInterval); 
                 isProcessing = true; 
@@ -260,9 +320,7 @@
         document.getElementById('lives').innerText = '❤️'.repeat(Math.max(0, lives));
         if (el) el.classList.add('shake');
         
-        setTimeout(() => { 
-            if(el) el.classList.remove('shake'); 
-        }, 400);
+        setTimeout(() => { if(el) el.classList.remove('shake'); }, 400);
         
         if (lives < 0) { 
             triggerGameOver(false, msg); 
@@ -278,15 +336,16 @@
         setTimeout(() => t.style.display = 'none', 900);
     }
 
+    // 游戏中普通的提示弹窗
     function showModal(title, body) {
         document.getElementById('modal-title').innerHTML = title;
         document.getElementById('modal-body').innerHTML = body;
-        document.getElementById('modal').style.display = 'flex';
-        document.getElementById('share-btn').style.display = 'none';
         
-        const btn = document.getElementById('modal-btn');
-        btn.innerText = "知晓并继续";
-        btn.onclick = closeModal;
+        // 显示继续按钮，隐藏结算按钮
+        document.getElementById('modal-btn').style.display = 'block';
+        document.getElementById('end-game-actions').style.display = 'none';
+        
+        document.getElementById('modal').style.display = 'flex';
     }
 
     function closeModal() { 
@@ -294,23 +353,32 @@
         if (!isGameOver) nextQuestion(); 
     }
 
+    // 结算逻辑
     function triggerGameOver(win, msg) {
         isGameOver = true; 
         clearInterval(timerInterval);
         
+        const now = new Date();
+        finalDuration = Math.floor((now - startTime) / 1000);
+        finalStatus = lives >= 0 ? "评定：合格" : "评定：终止(出现严重失误)";
+
+        // 计算最差项和最佳项
         let lowestRate = 1.1; 
         let worstCat = "";
+        let maxRate = -1;
+        let bestCat = "";
         
+        const catNames = { acid: "强酸防腐隔离", base: "强碱防腐隔离", flammable: "易燃品规范管理", oxidizer: "强氧化剂管控", reducer: "强还原剂管理", toxic: "毒麻/易制毒管控" };
+
         for (let cat in encountered) {
             if (encountered[cat] > 0) {
                 let rate = stats[cat] / encountered[cat];
-                if (rate < lowestRate) {
-                    lowestRate = rate;
-                    worstCat = cat;
-                }
+                if (rate < lowestRate) { lowestRate = rate; worstCat = cat; }
+                if (rate > maxRate) { maxRate = rate; bestCat = catNames[cat]; }
             }
         }
 
+        // 诊断建议生成
         let adviceHtml = "";
         if (lowestRate < 1.0 && worstCat) {
             finalAdviceText = adviceDB[worstCat] || "建议全面复习实验室危化品管理章程。";
@@ -320,71 +388,114 @@
             adviceHtml = `<div class="advice-panel advice-success"><b>🏆 完美表现：</b><br>${finalAdviceText}</div>`;
         }
 
+        // 称号生成
+        finalHonor = maxRate >= 1 ? `【${bestCat}大师】` : `【安全防线守卫者】`;
+        if (!bestCat) { finalHonor = "【见习安全员】"; }
+
         const title = win ? "考核通过 ✅" : "考核终止 ❌";
-        const content = (win ? `恭喜！你顺利完成了全套危化品分类考核。<br><br><b>最终评估得分：${score} 分</b>` : msg) + adviceHtml;
+        const content = (win ? `恭喜！你顺利完成了全套危化品分类考核。<br><br><b>最终评估得分：<span style="color:#f39c12;font-size:24px;">${score}</span> 分</b>` : msg) + adviceHtml;
         
         document.getElementById('modal-title').innerHTML = title;
         document.getElementById('modal-body').innerHTML = content;
-        document.getElementById('modal').style.display = 'flex';
-        document.getElementById('share-btn').style.display = 'block';
         
-        const btn = document.getElementById('modal-btn');
-        btn.innerText = "重新参加考核";
-        btn.onclick = () => location.reload();
+        // 隐藏继续按钮，显示游戏结束的按钮组
+        document.getElementById('modal-btn').style.display = 'none';
+        document.getElementById('end-game-actions').style.display = 'flex';
+
+        document.getElementById('modal').style.display = 'flex';
     }
 
-    function shareResult() {
+    // --- 姓名输入弹窗控制 ---
+    function openNameModal() {
+        document.getElementById('name-modal').style.display = 'flex';
+    }
+
+    function closeNameModal() {
+        document.getElementById('name-modal').style.display = 'none';
+    }
+
+    // --- 文字分享 (也可选) ---
+    function shareTextResult() {
         try {
             const now = new Date();
-            const duration = Math.floor((now - startTime) / 1000);
-            const status = lives >= 0 ? "合格 (Safe)" : "不合格 (Hazard)";
+            const shareText = `【实验室安全考核战报】\n日期：${now.toLocaleDateString()}\n考核状态：${finalStatus}\n最终得分：${score}分\n用时：${finalDuration}秒\n称号：${finalHonor}\n\n诊断建议：\n${finalAdviceText}\n\n已掌握易制毒分级及高危试剂存放规范，快来挑战！`;
             
-            let bestCat = "";
-            let maxRate = -1;
-            const catNames = { acid: "强酸防腐隔离", base: "强碱防腐隔离", flammable: "易燃品规范管理", oxidizer: "强氧化剂管控", reducer: "强还原剂管理", toxic: "毒麻/易制毒管控" };
+            const textArea = document.createElement("textarea");
+            textArea.value = shareText;
+            textArea.style.position = "fixed";
+            textArea.style.top = "-9999px";
+            document.body.appendChild(textArea);
+            textArea.focus();
+            textArea.select();
             
-            for (let cat in stats) {
-                if (encountered[cat] > 0) {
-                    let rate = stats[cat] / encountered[cat];
-                    if (rate > maxRate) { maxRate = rate; bestCat = catNames[cat]; }
-                }
+            if (document.execCommand('copy')) {
+                alert("文字战报已成功复制！\n快去微信班级群或朋友圈粘贴打卡吧。");
+            } else {
+                alert("由于浏览器限制复制失败，请截图保存。");
             }
-
-            let honor = maxRate >= 1 ? `【${bestCat}大师】` : `【安全防线守卫者】`;
-            if (!bestCat) { bestCat = "暂无数据"; honor = "【见习安全员】"; maxRate = 0; }
-            
-            const shareText = `【实验室安全考核：专属动态战报】\n日期：${now.toLocaleDateString()}\n考核状态：${status}\n最终得分：${score}分\n用时：${duration}秒\n强项：最擅长[${bestCat}]，正确率达${Math.round(maxRate*100)}%！\n称号：${honor}\n\n诊断建议：\n${finalAdviceText}\n\n已掌握易制毒分级及高危试剂存放规范，快来挑战！`;
-            
-            executeFallback(shareText); 
+            document.body.removeChild(textArea);
         } catch(e) {
             alert("生成战报时发生异常，请检查浏览器设置。");
         }
     }
 
-    function executeFallback(text) {
-        const textArea = document.createElement("textarea");
-        textArea.value = text;
-        textArea.style.position = "fixed";
-        textArea.style.top = "-9999px";
-        textArea.style.left = "-9999px";
-        document.body.appendChild(textArea);
-        textArea.focus();
-        textArea.select();
+    // 🏆 核心：输入姓名后生成图片战报
+    async function confirmAndGenerateImage() {
+        const btn = document.getElementById('gen-img-confirm-btn');
+        btn.innerText = "正在生成中...";
+        btn.disabled = true;
+
+        // 获取用户输入的姓名，为空则使用默认词
+        let inputName = document.getElementById('player-name-end').value.trim();
+        if (!inputName) inputName = "匿名安全员";
+
         try {
-            const successful = document.execCommand('copy');
-            if (successful) {
-                alert("战报已成功复制！\n快去微信班级群或朋友圈粘贴打卡吧。");
-            } else {
-                throw new Error("Copy command rejected");
-            }
-        } catch (err) {
-            alert("由于浏览器限制复制失败，请手动长按下方文本复制：\n\n" + text);
+            // 1. 将数据填充至隐藏的海报模板
+            document.getElementById('cert-score').innerText = score;
+            document.getElementById('cert-name').innerText = inputName;
+            document.getElementById('cert-time').innerText = finalDuration + " 秒";
+            document.getElementById('cert-honor').innerText = finalHonor;
+            document.getElementById('cert-date').innerText = new Date().toLocaleDateString();
+            
+            const statusEl = document.getElementById('cert-status');
+            statusEl.innerText = finalStatus;
+            statusEl.className = "cert-status " + (lives >= 0 ? "status-pass" : "status-fail");
+
+            const adviceEl = document.getElementById('cert-advice');
+            adviceEl.innerText = "系统建议：" + finalAdviceText;
+            adviceEl.className = "advice-panel " + (lives >= 0 ? "advice-success" : "advice-warning");
+
+            // 2. 使用 html2canvas 将隐藏的 div 转化为 Canvas
+            const certContainer = document.getElementById('cert-container');
+            const canvas = await html2canvas(certContainer, {
+                scale: 2,           // 提高清晰度
+                useCORS: true,      // 允许跨域图片
+                logging: false,
+                backgroundColor: null 
+            });
+
+            // 3. 生成图片下载链接并触发下载
+            const imgData = canvas.toDataURL('image/png');
+            const link = document.createElement("a");
+            link.href = imgData;
+            link.download = `安全战报_${inputName}.png`;
+            link.click();
+            
+            showToast("✅ 图片生成完毕！请查看相册/下载列表");
+            
+            // 生成成功后关闭输入弹窗
+            setTimeout(() => {
+                closeNameModal();
+            }, 800);
+
+        } catch (error) {
+            console.error(error);
+            alert("生成图片失败，可能存在浏览器权限限制。");
         } finally {
-            document.body.removeChild(textArea);
+            btn.innerText = "确定并生成 📸";
+            btn.disabled = false;
         }
     }
-
-    window.onload = initGame;
 </script>
 </body>
 </html>
